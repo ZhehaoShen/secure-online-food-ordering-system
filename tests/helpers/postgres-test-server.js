@@ -100,7 +100,11 @@ function commandFailureMessage(name, result) {
 }
 
 function createCommandRunner(binDirectory, workingDirectory) {
-  return (name, argumentsList, { allowFailure = false } = {}) => {
+  return (
+    name,
+    argumentsList,
+    { allowFailure = false, captureOutput = true } = {},
+  ) => {
     const result = spawnSync(
       join(binDirectory, executableFilename(name)),
       argumentsList,
@@ -109,6 +113,9 @@ function createCommandRunner(binDirectory, workingDirectory) {
         encoding: "utf8",
         maxBuffer: EXECUTION_BUFFER_BYTES,
         shell: false,
+        stdio: captureOutput
+          ? ["ignore", "pipe", "pipe"]
+          : ["ignore", "ignore", "ignore"],
         windowsHide: true,
       },
     );
@@ -197,7 +204,11 @@ export async function startPostgresTestServer({
       `-h ${DATABASE_HOST} -p ${port} -c fsync=off -c synchronous_commit=off -c full_page_writes=off`,
       "-w",
       "start",
-    ]);
+    ], {
+      // A Windows postgres child can inherit captured pipe handles from pg_ctl,
+      // which prevents spawnSync from observing EOF after pg_ctl exits.
+      captureOutput: false,
+    });
     started = true;
     run("createdb", [
       "--host",
