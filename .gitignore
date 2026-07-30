@@ -1,0 +1,70 @@
+# Local project planning file (never commit)
+ProjectPlan.md
+
+# Daily plans generated from ProjectPlan.md (never commit)
+day1.md
+day2.md
+day3.md
+day4.md
+day5.md
+day6.md
+day7.md
+day8.md
+
+# Approval-gated local execution checklist (never commit)
+todo.md
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+
+# Node.js dependencies and package-manager caches
+node_modules/
+.npm/
+.pnpm-store/
+
+# Logs and runtime state
+logs/
+.runtime/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.pid
+*.pid.lock
+
+# Test coverage and generated test output
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+
+# Build output and temporary files
+dist/
+build/
+.cache/
+.tmp/
+tmp/
+
+# Local PostgreSQL data, dumps, and backups
+.pgdata/
+backups/
+db/backups/
+*.dump
+*.backup
+*.sql.gz
+
+# Local embedded databases, if used by tools or tests
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db

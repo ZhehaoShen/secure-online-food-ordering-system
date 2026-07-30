@@ -1,0 +1,18 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="error-main">
+  <section class="shell error-panel">
+    <div class="error-code" aria-hidden="true"><%= statusCode %></div>
+    <div class="error-copy">
+      <p class="section-kicker"><%= code %></p>
+      <h1><%= pageTitle %></h1>
+      <p><%= message %></p>
+      <a class="primary-link" href="/">Return to the menu</a>
+      <p class="request-reference">
+        Request reference: <code><%= requestId %></code>
+      </p>
+    </div>
+  </section>
+</main>
+
+<%- include("partials/footer") %>

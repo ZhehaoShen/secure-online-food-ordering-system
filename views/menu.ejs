@@ -1,0 +1,105 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content">
+  <section class="hero">
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <span class="status-dot" aria-hidden="true"></span>
+          Open today · fictional menu
+        </p>
+        <h1>Comfort food,<br><em>clear choices.</em></h1>
+        <p class="hero-lede">
+          Thoughtful bowls, wraps, sides, and sweets—priced clearly and
+          prepared as a secure database-driven demonstration.
+        </p>
+      </div>
+      <aside class="hero-note" aria-label="Menu summary">
+        <span class="note-number"><%= foods.length %></span>
+        <p>
+          <strong><%= selectedCategory || "available dishes" %></strong>
+          <span>
+            <%= selectedCategory
+              ? "matching your current filter"
+              : `across ${categories.length} menu categories` %>
+          </span>
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="menu-section" aria-labelledby="menu-heading">
+    <div class="shell">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Today’s selection</p>
+          <h2 id="menu-heading">
+            <%= selectedCategory || "All available dishes" %>
+          </h2>
+        </div>
+        <p class="section-caption">Prices shown in Canadian dollars.</p>
+      </div>
+
+      <nav class="category-filters" aria-label="Filter menu by category">
+        <a
+          class="<%= selectedCategory ? 'filter-chip' : 'filter-chip is-selected' %>"
+          href="/"
+        >All</a>
+        <% categories.forEach((category) => { %>
+          <a
+            class="<%= selectedCategory === category.name
+              ? 'filter-chip is-selected'
+              : 'filter-chip' %>"
+            href="<%= category.url %>"
+          ><%= category.name %></a>
+        <% }); %>
+      </nav>
+
+      <% if (foods.length > 0) { %>
+        <div class="menu-grid">
+          <% foods.forEach((food, index) => { %>
+            <article class="menu-card">
+              <div class="card-index" aria-hidden="true">
+                <span><%= String(index + 1).padStart(2, "0") %></span>
+                <span class="index-line"></span>
+              </div>
+              <div class="card-content">
+                <div class="card-meta">
+                  <span class="category-label"><%= food.category %></span>
+                  <span class="availability">
+                    <span aria-hidden="true"></span>
+                    <%= food.isAvailable ? "Available" : "Unavailable" %>
+                  </span>
+                </div>
+                <h3><%= food.name %></h3>
+                <p><%= food.description %></p>
+                <div class="card-footer">
+                  <strong><%= food.price %></strong>
+                  <span>CAD</span>
+                </div>
+              </div>
+            </article>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <span class="empty-mark" aria-hidden="true">0</span>
+          <div>
+            <p class="section-kicker">Nothing on the pass</p>
+            <h3>No menu items are available right now.</h3>
+            <p>
+              <%= selectedCategory
+                ? "Try another category or return to the full menu."
+                : "Please check back after the kitchen updates its menu." %>
+            </p>
+            <% if (selectedCategory) { %>
+              <a class="text-link" href="/">Clear category filter</a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include("partials/footer") %>
