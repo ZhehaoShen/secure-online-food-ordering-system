@@ -2,14 +2,27 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { createApplication } from "./app.js";
+import { readSessionConfig } from "./config/session.js";
 import {
   closeDatabasePool,
   createDatabasePool,
 } from "./db/pool.js";
 import { logEvent } from "./logger.js";
 import { createFoodItemRepository } from "./repositories/food-item-repository.js";
+import { createOrderRepository } from "./repositories/order-repository.js";
+import { createUserRepository } from "./repositories/user-repository.js";
 import { removeServerPid, writeServerPid } from "./runtime-state.js";
+import { createAdminOrderService } from "./services/admin-order-service.js";
+import { createCartService } from "./services/cart-service.js";
+import { createFoodManagementService } from "./services/food-management-service.js";
 import { createMenuService } from "./services/menu-service.js";
+import { createOrderService } from "./services/order-service.js";
+import { createUserService } from "./services/user-service.js";
+import { createSessionMiddleware } from "./session/middleware.js";
+import {
+  closeSessionStore,
+  createSessionStore,
+} from "./session/store.js";
 
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3000;
@@ -55,13 +68,46 @@ export function startServer({
 }
 
 function createRuntimeApplication(environment = process.env) {
+  const sessionConfig = readSessionConfig(environment);
   const pool = createDatabasePool({ environment });
   const foodItemRepository = createFoodItemRepository(pool);
+  const orderRepository = createOrderRepository(pool);
+  const userRepository = createUserRepository(pool);
+  const cartService = createCartService(foodItemRepository);
+  const adminOrderService = createAdminOrderService(orderRepository);
+  const foodManagementService = createFoodManagementService(
+    foodItemRepository,
+  );
   const menuService = createMenuService(foodItemRepository);
+  const orderService = createOrderService(orderRepository);
+  const userService = createUserService(userRepository);
+  const sessionStore = createSessionStore({
+    pool,
+    idleTimeoutMilliseconds: sessionConfig.idleTimeoutMilliseconds,
+  });
+  const sessionMiddleware = createSessionMiddleware({
+    store: sessionStore,
+    config: sessionConfig,
+  });
 
   return Object.freeze({
-    app: createApplication({ menuService }),
-    pool,
+    app: createApplication({
+      adminOrderService,
+      cartService,
+      foodManagementService,
+      menuService,
+      orderService,
+      sessionCookie: Object.freeze({
+        name: sessionConfig.cookieName,
+        secure: sessionConfig.secureCookie,
+      }),
+      sessionMiddleware,
+      userService,
+    }),
+    async cleanup() {
+      await closeSessionStore(sessionStore);
+      await closeDatabasePool(pool);
+    },
   });
 }
 
@@ -110,5 +156,5 @@ const invokedFile = process.argv[1]
 if (import.meta.url === invokedFile) {
   const runtime = createRuntimeApplication();
   const server = startServer({ app: runtime.app, recordPid: true });
-  installShutdownHandlers(server, () => closeDatabasePool(runtime.pool));
+  installShutdownHandlers(server, runtime.cleanup);
 }

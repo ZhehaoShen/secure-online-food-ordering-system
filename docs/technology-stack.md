@@ -15,9 +15,9 @@
 | Database driver | `pg` (node-postgres), pure JavaScript mode | `8.22.0` | Parameterized queries and portability without native compiler dependencies |
 | Test framework | Vitest | `4.1.7` | Supports Node.js 24 and provides unit, integration, coverage, and CI-friendly test execution |
 | Password hashing | Node.js `node:crypto` asynchronous `scrypt()` | Bundled with Node.js `24.18.0` | Memory-hard password derivation without a platform-specific native add-on; use a unique random salt of at least 16 bytes and constant-time comparison |
-| Session library | `express-session` with `connect-pg-simple` | Current supported releases pinned by `package-lock.json` during setup | Server-side sessions persisted in PostgreSQL; avoids the development-only in-memory session store |
+| Session library | `express-session` with `connect-pg-simple` | `express-session` `1.19.0`; `connect-pg-simple` `10.0.0` | Server-side sessions persisted in PostgreSQL; avoids the development-only in-memory session store |
 
-All npm dependencies will be installed as exact resolved versions in `package-lock.json`. Major-version selections above define the approved stack; dependency installation and lockfile creation belong to a later Day 2 step.
+All npm dependencies are installed as exact resolved versions in `package-lock.json`.
 
 ## Supported operating systems
 
@@ -67,7 +67,7 @@ All npm dependencies will be installed as exact resolved versions in `package-lo
 | `pg` | Pure JavaScript driver under Node.js | Pure JavaScript driver under Node.js | node-postgres documents the JavaScript driver as the portable option without a compiler |
 | Vitest `4.1.7` | Runs under Node.js 24 | Runs under Node.js 24 | Vitest requires Node.js 22.12 or newer; Node.js 24 exceeds the requirement |
 | `node:crypto` `scrypt()` | Built into the official Node.js binary | Built into the official Node.js binary | Stable Node.js crypto API |
-| `express-session` and `connect-pg-simple` | Node.js and PostgreSQL-backed | Node.js and PostgreSQL-backed | JavaScript session middleware and PostgreSQL storage; no OS-specific project code |
+| `express-session` `1.19.0` and `connect-pg-simple` `10.0.0` | Node.js and PostgreSQL-backed | Node.js and PostgreSQL-backed | JavaScript session middleware and PostgreSQL storage; no OS-specific project code |
 
 ## Official references
 

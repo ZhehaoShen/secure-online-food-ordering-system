@@ -77,6 +77,25 @@
                   <strong><%= food.price %></strong>
                   <span>CAD</span>
                 </div>
+                <% if (currentUser) { %>
+                  <form class="card-order-form" method="post" action="/cart/items">
+                    <input type="hidden" name="foodItemId" value="<%= food.id %>">
+                    <label>
+                      <span>Quantity</span>
+                      <input
+                        name="quantity"
+                        type="number"
+                        min="1"
+                        max="99"
+                        value="1"
+                        required
+                      >
+                    </label>
+                    <button type="submit">Add to cart</button>
+                  </form>
+                <% } else { %>
+                  <a class="card-sign-in" href="/login">Sign in to order</a>
+                <% } %>
               </div>
             </article>
           <% }); %>

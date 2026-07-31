@@ -1,0 +1,73 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="admin-main">
+  <div class="shell">
+    <section class="admin-heading" aria-labelledby="admin-food-heading">
+      <div>
+        <p class="section-kicker">Administrator workspace</p>
+        <h1 id="admin-food-heading">Manage<br><em>food.</em></h1>
+      </div>
+      <a class="primary-link" href="/admin/food-items/new">
+        Add food item
+      </a>
+    </section>
+
+    <% if (notice) { %>
+      <p class="form-notice" role="status"><%= notice %></p>
+    <% } %>
+
+    <% if (foods.length > 0) { %>
+      <section class="admin-food-list" aria-label="Managed food items">
+        <% foods.forEach((food) => { %>
+          <article class="admin-food-card">
+            <div class="admin-food-card-main">
+              <div class="admin-food-meta">
+                <span class="category-label"><%= food.category %></span>
+                <span
+                  class="<%= food.isAvailable
+                    ? 'status-pill'
+                    : 'status-pill status-cancelled' %>"
+                >
+                  <%= food.isAvailable ? "Available" : "Disabled" %>
+                </span>
+              </div>
+              <h2><%= food.name %></h2>
+              <p><%= food.description || "No description provided." %></p>
+            </div>
+            <div class="admin-food-actions">
+              <strong><%= food.price %></strong>
+              <a
+                class="text-link"
+                href="/admin/food-items/<%= food.id %>/edit"
+              >Edit</a>
+              <% if (food.isAvailable) { %>
+                <form
+                  method="post"
+                  action="/admin/food-items/<%= food.id %>/disable"
+                >
+                  <button class="danger-button" type="submit">Disable</button>
+                </form>
+              <% } else { %>
+                <span class="disabled-label">Already disabled</span>
+              <% } %>
+            </div>
+          </article>
+        <% }); %>
+      </section>
+    <% } else { %>
+      <div class="empty-state admin-food-empty">
+        <span class="empty-mark" aria-hidden="true">0</span>
+        <div>
+          <p class="section-kicker">No managed food</p>
+          <h2>No food items have been created.</h2>
+          <p>Add the first fictional food item to begin the menu.</p>
+          <a class="text-link" href="/admin/food-items/new">
+            Add food item
+          </a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

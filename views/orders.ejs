@@ -1,0 +1,59 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="orders-main">
+  <div class="shell">
+    <section class="orders-heading" aria-labelledby="orders-heading">
+      <div>
+        <p class="section-kicker">Customer account</p>
+        <h1 id="orders-heading">Order<br><em>history.</em></h1>
+      </div>
+      <p>
+        <%= orders.length %>
+        <%= orders.length === 1 ? "order" : "orders" %>
+      </p>
+    </section>
+
+    <% if (orders.length > 0) { %>
+      <section class="order-history-list" aria-label="Past orders">
+        <% orders.forEach((order) => { %>
+          <article class="order-history-card">
+            <div class="order-history-meta">
+              <span class="status-pill status-<%= order.status %>">
+                <%= order.statusLabel %>
+              </span>
+              <span><%= order.created %></span>
+            </div>
+            <div class="order-history-body">
+              <div>
+                <p class="section-kicker">Order #<%= order.id %></p>
+                <h2>
+                  <%= order.itemCount %>
+                  <%= order.itemCount === 1 ? "item" : "items" %>
+                  across
+                  <%= order.lineCount %>
+                  <%= order.lineCount === 1 ? "line" : "lines" %>
+                </h2>
+              </div>
+              <strong class="order-history-total"><%= order.total %></strong>
+            </div>
+            <a class="text-link" href="/orders/<%= order.id %>">
+              View order
+            </a>
+          </article>
+        <% }); %>
+      </section>
+    <% } else { %>
+      <div class="empty-state order-history-empty">
+        <span class="empty-mark" aria-hidden="true">0</span>
+        <div>
+          <p class="section-kicker">No orders yet</p>
+          <h2>Your order history is empty.</h2>
+          <p>Build a cart from the available menu when you are ready.</p>
+          <a class="text-link" href="/">Browse the menu</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

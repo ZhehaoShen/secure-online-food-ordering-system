@@ -1,9 +1,11 @@
+import { SearchQueryError } from "../services/menu-service.js";
+
 const cadCurrency = new Intl.NumberFormat("en-CA", {
   style: "currency",
   currency: "CAD",
 });
 
-function menuFoodView(food) {
+function foodView(food) {
   return Object.freeze({
     ...food,
     price: cadCurrency.format(food.priceCents / 100),
@@ -17,6 +19,31 @@ function categoryView(category) {
   });
 }
 
+function safeSearchValue(value, maximumLength) {
+  return typeof value === "string"
+    ? value.slice(0, maximumLength)
+    : "";
+}
+
+function renderSearch(response, {
+  statusCode = 200,
+  foods = [],
+  categories = [],
+  query = null,
+  selectedCategory = null,
+  errors = [],
+} = {}) {
+  response.status(statusCode).render("search", {
+    pageTitle: "Search",
+    activePath: "/search",
+    foods: foods.map(foodView),
+    categories,
+    query,
+    selectedCategory,
+    errors,
+  });
+}
+
 export function createMenuController(menuService) {
   return Object.freeze({
     async show(request, response) {
@@ -27,10 +54,35 @@ export function createMenuController(menuService) {
       response.status(200).render("menu", {
         pageTitle: "Menu",
         activePath: "/",
-        foods: menu.foods.map(menuFoodView),
+        foods: menu.foods.map(foodView),
         categories: menu.categories.map(categoryView),
         selectedCategory: menu.selectedCategory,
       });
+    },
+
+    async search(request, response) {
+      try {
+        const search = await menuService.getSearchResults({
+          query: request.query.q,
+          category: request.query.category,
+        });
+
+        renderSearch(response, search);
+      } catch (error) {
+        if (!(error instanceof SearchQueryError)) {
+          throw error;
+        }
+
+        renderSearch(response, {
+          statusCode: 422,
+          query: safeSearchValue(request.query.q, 120),
+          selectedCategory: safeSearchValue(
+            request.query.category,
+            80,
+          ),
+          errors: ["Enter a search term and category within the allowed lengths."],
+        });
+      }
     },
   });
 }

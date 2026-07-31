@@ -1,0 +1,61 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="orders-main">
+  <div class="shell">
+    <% if (order) { %>
+      <section class="order-confirmation" aria-labelledby="order-heading">
+        <div>
+          <p class="section-kicker">Order confirmed</p>
+          <h1 id="order-heading">Thank<br><em>you.</em></h1>
+        </div>
+        <div class="order-confirmation-meta">
+          <span class="status-pill status-<%= order.status %>">
+            <%= order.statusLabel %>
+          </span>
+          <p>Order #<strong><%= order.id %></strong></p>
+          <p>Placed <%= order.created %></p>
+        </div>
+      </section>
+
+      <div class="order-detail-layout">
+        <section class="order-detail-items" aria-label="Order items">
+          <% order.items.forEach((item) => { %>
+            <article class="order-detail-item">
+              <div>
+                <p class="section-kicker">
+                  Quantity <%= item.quantity %>
+                </p>
+                <h2><%= item.foodNameSnapshot %></h2>
+                <p><%= item.unitPrice %> each</p>
+              </div>
+              <strong><%= item.lineTotal %></strong>
+            </article>
+          <% }); %>
+        </section>
+
+        <aside class="order-detail-summary" aria-labelledby="order-total-heading">
+          <p class="section-kicker">Saved snapshot</p>
+          <h2 id="order-total-heading">Order total</h2>
+          <strong><%= order.total %></strong>
+          <p>
+            Names and prices reflect the values saved when this order was
+            placed.
+          </p>
+          <a class="text-link" href="/orders">View order history</a>
+        </aside>
+      </div>
+    <% } else { %>
+      <div class="empty-state order-missing">
+        <span class="empty-mark" aria-hidden="true">404</span>
+        <div>
+          <p class="section-kicker">Order unavailable</p>
+          <h1>The order could not be found.</h1>
+          <p>It may not exist or may not belong to this account.</p>
+          <a class="text-link" href="/orders">Return to order history</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

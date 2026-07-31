@@ -1,0 +1,94 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="auth-main">
+  <div class="shell auth-layout">
+    <section class="auth-intro" aria-labelledby="register-heading">
+      <p class="section-kicker">Customer registration</p>
+      <h1 id="register-heading">A table is<br><em>waiting.</em></h1>
+      <p>
+        Create a fictional local account to place and review orders in this
+        secure software engineering demonstration.
+      </p>
+    </section>
+
+    <section class="auth-card" aria-labelledby="register-form-heading">
+      <h2 id="register-form-heading">Create your account</h2>
+      <p class="auth-card-lede">All fields are required.</p>
+
+      <% if (errors.length > 0) { %>
+        <div class="form-errors" role="alert" aria-labelledby="form-error-title">
+          <p id="form-error-title">Please review the form.</p>
+          <ul>
+            <% errors.forEach((error) => { %>
+              <li><%= error %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form method="post" action="/register" novalidate>
+        <div class="form-field">
+          <label for="name">Name</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value="<%= values.name %>"
+            autocomplete="name"
+            maxlength="100"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value="<%= values.email %>"
+            autocomplete="email"
+            maxlength="254"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            maxlength="1024"
+            aria-describedby="password-help"
+            required
+          >
+          <p id="password-help" class="field-help">
+            Used only for this fictional local account.
+          </p>
+        </div>
+
+        <div class="form-field">
+          <label for="password-confirmation">Confirm password</label>
+          <input
+            id="password-confirmation"
+            name="passwordConfirmation"
+            type="password"
+            autocomplete="new-password"
+            maxlength="1024"
+            required
+          >
+        </div>
+
+        <button class="primary-button" type="submit">Create account</button>
+      </form>
+
+      <p class="auth-alternate">
+        Already registered? <a href="/login">Sign in</a>
+      </p>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

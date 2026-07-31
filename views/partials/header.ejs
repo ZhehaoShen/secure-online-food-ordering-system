@@ -26,9 +26,59 @@
             class="<%= activePath === '/' ? 'nav-link is-active' : 'nav-link' %>"
             href="/"
           >Menu</a>
-          <a class="nav-link" href="/search">Search</a>
-          <a class="nav-link" href="/orders">Orders</a>
-          <a class="nav-action" href="/login">Sign in</a>
+          <a
+            class="<%= activePath === '/search'
+              ? 'nav-link is-active'
+              : 'nav-link' %>"
+            href="/search"
+          >Search</a>
+          <% if (currentUser) { %>
+            <a
+              class="<%= activePath === '/cart'
+                ? 'nav-link is-active'
+                : 'nav-link' %>"
+              href="/cart"
+            >Cart</a>
+            <a
+              class="<%= activePath === '/orders'
+                ? 'nav-link is-active'
+                : 'nav-link' %>"
+              href="/orders"
+            >Orders</a>
+            <% if (currentUser.role === "admin") { %>
+              <a
+                class="<%= activePath === '/admin/food-items'
+                  ? 'nav-link is-active'
+                  : 'nav-link' %>"
+                href="/admin/food-items"
+              >Manage food</a>
+              <a
+                class="<%= activePath === '/admin/orders'
+                  ? 'nav-link is-active'
+                  : 'nav-link' %>"
+                href="/admin/orders"
+              >Manage orders</a>
+            <% } %>
+            <span class="nav-identity">
+              Signed in as <strong><%= currentUser.name %></strong>
+            </span>
+            <form class="nav-logout" method="post" action="/logout">
+              <button type="submit">Sign out</button>
+            </form>
+          <% } else { %>
+            <a
+              class="<%= activePath === '/register'
+                ? 'nav-link is-active'
+                : 'nav-link' %>"
+              href="/register"
+            >Register</a>
+            <a
+              class="<%= activePath === '/login'
+                ? 'nav-action is-active'
+                : 'nav-action' %>"
+              href="/login"
+            >Sign in</a>
+          <% } %>
         </nav>
       </div>
     </header>

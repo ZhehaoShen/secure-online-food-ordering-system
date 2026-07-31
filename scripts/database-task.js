@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(SCRIPT_DIRECTORY, "..");
 const SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "schema.sql");
+const SESSION_SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "session-schema.sql");
 const SEED_FILE = resolve(PROJECT_ROOT, "db", "seed.sql");
 const SUPPORTED_TASKS = new Set(["migrate", "seed", "backup", "restore"]);
 
@@ -73,12 +74,20 @@ function run(command, argumentsList) {
 
 function runMigration() {
   requireFile(SCHEMA_FILE, "Database schema");
+  requireFile(SESSION_SCHEMA_FILE, "Session schema");
   run("psql", [
     ...connectionArguments(),
     "--set",
     "ON_ERROR_STOP=1",
     "--file",
     SCHEMA_FILE,
+  ]);
+  run("psql", [
+    ...connectionArguments(),
+    "--set",
+    "ON_ERROR_STOP=1",
+    "--file",
+    SESSION_SCHEMA_FILE,
   ]);
 }
 

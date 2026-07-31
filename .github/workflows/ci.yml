@@ -51,24 +51,7 @@ jobs:
         run: brew install postgresql@16
 
       - name: Check JavaScript syntax
-        run: |
-          node --check src/app.js
-          node --check src/config/database.js
-          node --check src/controllers/menu-controller.js
-          node --check src/db/pool.js
-          node --check src/errors.js
-          node --check src/logger.js
-          node --check src/repositories/food-item-repository.js
-          node --check src/routes/menu-routes.js
-          node --check src/runtime-state.js
-          node --check src/server.js
-          node --check src/services/menu-service.js
-          node --check scripts/database-task.js
-          node --check scripts/healthcheck.js
-          node --check scripts/shutdown.js
-          node --check tests/helpers/postgres-test-server.js
-          node --check tests/integration/database-menu-foundation.test.js
-          node --check vitest.config.js
+        run: npm run check:syntax
 
-      - name: Run tests
-        run: npm test
+      - name: Run Day 2 and Day 3 tests
+        run: npm run test:day3

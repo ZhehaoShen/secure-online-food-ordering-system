@@ -1,0 +1,90 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="admin-main">
+  <div class="shell">
+    <section class="admin-heading" aria-labelledby="admin-orders-heading">
+      <div>
+        <p class="section-kicker">Administrator workspace</p>
+        <h1 id="admin-orders-heading">Review<br><em>orders.</em></h1>
+      </div>
+      <p class="admin-order-count">
+        <%= orders.length %>
+        <%= orders.length === 1 ? "order" : "orders" %>
+      </p>
+    </section>
+
+    <% if (errors.length > 0) { %>
+      <div class="form-errors" role="alert">
+        <p>The order filter is invalid.</p>
+        <ul>
+          <% errors.forEach((error) => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form class="admin-order-filter" method="get" action="/admin/orders">
+      <label for="admin-order-status">Filter by status</label>
+      <select id="admin-order-status" name="status">
+        <option value="">All statuses</option>
+        <% statuses.forEach((status) => { %>
+          <option
+            value="<%= status.value %>"
+            <%= status.selected ? "selected" : "" %>
+          ><%= status.label %></option>
+        <% }); %>
+      </select>
+      <button type="submit">Apply filter</button>
+      <% if (selectedStatus) { %>
+        <a class="text-link" href="/admin/orders">Clear</a>
+      <% } %>
+    </form>
+
+    <% if (orders.length > 0) { %>
+      <section class="admin-order-list" aria-label="Customer orders">
+        <% orders.forEach((order) => { %>
+          <article class="admin-order-card">
+            <div class="admin-order-card-meta">
+              <span class="status-pill status-<%= order.status %>">
+                <%= order.statusLabel %>
+              </span>
+              <span><%= order.created %></span>
+            </div>
+            <div class="admin-order-card-body">
+              <div>
+                <p class="section-kicker">Order #<%= order.id %></p>
+                <h2><%= order.customerName %></h2>
+                <p><%= order.customerEmail %></p>
+              </div>
+              <div class="admin-order-card-total">
+                <strong><%= order.total %></strong>
+                <span>
+                  <%= order.itemCount %>
+                  <%= order.itemCount === 1 ? "item" : "items" %>
+                  · <%= order.lineCount %>
+                  <%= order.lineCount === 1 ? "line" : "lines" %>
+                </span>
+              </div>
+            </div>
+            <a class="text-link" href="/admin/orders/<%= order.id %>">
+              Review order
+            </a>
+          </article>
+        <% }); %>
+      </section>
+    <% } else { %>
+      <div class="empty-state admin-order-empty">
+        <span class="empty-mark" aria-hidden="true">0</span>
+        <div>
+          <p class="section-kicker">No matching orders</p>
+          <h2>No customer orders match this view.</h2>
+          <p>Clear the filter or check again after a customer orders.</p>
+          <a class="text-link" href="/admin/orders">Show all orders</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

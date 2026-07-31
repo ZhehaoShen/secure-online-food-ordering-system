@@ -6,12 +6,29 @@ import express from "express";
 
 import { publicErrorDetails } from "./errors.js";
 import { logEvent } from "./logger.js";
+import { exposeAuthenticatedUser } from "./middleware/authentication.js";
+import { registerAdminFoodRoutes } from "./routes/admin-food-routes.js";
+import { registerAdminOrderRoutes } from "./routes/admin-order-routes.js";
+import { registerAuthenticationRoutes } from "./routes/authentication-routes.js";
+import { registerCartRoutes } from "./routes/cart-routes.js";
 import { registerMenuRoutes } from "./routes/menu-routes.js";
+import { registerOrderRoutes } from "./routes/order-routes.js";
+import { registerRegistrationRoutes } from "./routes/registration-routes.js";
 
 const SERVICE_NAME = "secure-online-food-ordering-system";
 const SOURCE_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const VIEW_DIRECTORY = resolve(SOURCE_DIRECTORY, "..", "views");
 const PUBLIC_DIRECTORY = resolve(SOURCE_DIRECTORY, "..", "public");
+const ERROR_PAGE_TITLES = Object.freeze({
+  400: "Invalid request",
+  401: "Sign-in required",
+  403: "Access denied",
+  404: "Page not found",
+  409: "Request conflict",
+  422: "Check your request",
+  500: "Unexpected error",
+  503: "Service unavailable",
+});
 
 function requestWantsHtml(request) {
   const accept = request.get("accept") || "";
@@ -25,7 +42,7 @@ function renderErrorPage(response, {
   requestId,
 }) {
   response.status(statusCode).render("error", {
-    pageTitle: statusCode === 404 ? "Page not found" : "Service unavailable",
+    pageTitle: ERROR_PAGE_TITLES[statusCode] ?? "Request failed",
     activePath: null,
     statusCode,
     code,
@@ -34,13 +51,24 @@ function renderErrorPage(response, {
   });
 }
 
-export function createApplication({ registerRoutes, menuService } = {}) {
+export function createApplication({
+  adminOrderService,
+  cartService,
+  foodManagementService,
+  registerRoutes,
+  menuService,
+  orderService,
+  sessionCookie,
+  sessionMiddleware,
+  userService,
+} = {}) {
   const app = express();
 
   app.disable("x-powered-by");
   app.set("view engine", "ejs");
   app.set("views", VIEW_DIRECTORY);
   app.locals.currentYear = new Date().getUTCFullYear();
+  app.locals.currentUser = null;
 
   app.use((request, response, next) => {
     const requestId = randomUUID();
@@ -78,6 +106,17 @@ export function createApplication({ registerRoutes, menuService } = {}) {
     }),
   );
 
+  app.use(express.urlencoded({
+    extended: false,
+    limit: "16kb",
+    parameterLimit: 12,
+  }));
+
+  if (sessionMiddleware) {
+    app.use(sessionMiddleware);
+    app.use(exposeAuthenticatedUser);
+  }
+
   app.get("/health", (_request, response) => {
     response.status(200).json({
       status: "ok",
@@ -87,6 +126,36 @@ export function createApplication({ registerRoutes, menuService } = {}) {
 
   if (menuService) {
     registerMenuRoutes(app, { menuService });
+  }
+
+  if (userService) {
+    registerRegistrationRoutes(app, { userService });
+  }
+
+  if (userService && sessionMiddleware && sessionCookie) {
+    registerAuthenticationRoutes(app, {
+      userService,
+      sessionCookie,
+    });
+  }
+
+  if (cartService && sessionMiddleware) {
+    registerCartRoutes(app, { cartService });
+  }
+
+  if (cartService && orderService && sessionMiddleware) {
+    registerOrderRoutes(app, {
+      cartService,
+      orderService,
+    });
+  }
+
+  if (foodManagementService && sessionMiddleware) {
+    registerAdminFoodRoutes(app, { foodManagementService });
+  }
+
+  if (adminOrderService && sessionMiddleware) {
+    registerAdminOrderRoutes(app, { adminOrderService });
   }
 
   if (registerRoutes) {

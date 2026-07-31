@@ -1,0 +1,69 @@
+<%- include("partials/header", { pageTitle, activePath }) %>
+
+<main id="main-content" class="auth-main">
+  <div class="shell auth-layout">
+    <section class="auth-intro" aria-labelledby="login-heading">
+      <p class="section-kicker">Customer and administrator access</p>
+      <h1 id="login-heading">Welcome<br><em>back.</em></h1>
+      <p>
+        Sign in with a fictional local account to continue the ordering
+        demonstration.
+      </p>
+    </section>
+
+    <section class="auth-card" aria-labelledby="login-form-heading">
+      <h2 id="login-form-heading">Sign in</h2>
+      <p class="auth-card-lede">Enter the email and password for your account.</p>
+
+      <% if (notice) { %>
+        <p class="form-notice" role="status"><%= notice %></p>
+      <% } %>
+
+      <% if (errors.length > 0) { %>
+        <div class="form-errors" role="alert" aria-labelledby="login-error-title">
+          <p id="login-error-title">Sign-in was unsuccessful.</p>
+          <ul>
+            <% errors.forEach((error) => { %>
+              <li><%= error %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form method="post" action="/login" novalidate>
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value="<%= email %>"
+            autocomplete="email"
+            maxlength="254"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="1024"
+            required
+          >
+        </div>
+
+        <button class="primary-button" type="submit">Sign in</button>
+      </form>
+
+      <p class="auth-alternate">
+        Need an account? <a href="/register">Register</a>
+      </p>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>
