@@ -178,7 +178,12 @@ export async function startPostgresTestServer({
       started = false;
     }
 
-    rmSync(rootDirectory, { recursive: true, force: true });
+    rmSync(rootDirectory, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
   };
 
   try {
