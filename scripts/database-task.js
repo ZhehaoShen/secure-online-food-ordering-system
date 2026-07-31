@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync } from "node:fs";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { delimiter, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -9,6 +9,64 @@ const SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "schema.sql");
 const SESSION_SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "session-schema.sql");
 const SEED_FILE = resolve(PROJECT_ROOT, "db", "seed.sql");
 const SUPPORTED_TASKS = new Set(["migrate", "seed", "backup", "restore"]);
+
+function versionDirectories(rootDirectory) {
+  if (!rootDirectory || !existsSync(rootDirectory)) {
+    return [];
+  }
+
+  return readdirSync(rootDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((left, right) =>
+      right.localeCompare(left, undefined, { numeric: true }),
+    )
+    .map((version) => join(rootDirectory, version, "bin"));
+}
+
+function postgresBinCandidates(environment) {
+  const windowsDirectories = [
+    ...versionDirectories(
+      environment.ProgramFiles
+        ? join(environment.ProgramFiles, "PostgreSQL")
+        : null,
+    ),
+    ...versionDirectories(
+      environment["ProgramFiles(x86)"]
+        ? join(environment["ProgramFiles(x86)"], "PostgreSQL")
+        : null,
+    ),
+  ];
+  const pathDirectories = (environment.PATH ?? "")
+    .split(delimiter)
+    .filter(Boolean);
+
+  return [
+    environment.POSTGRES_BIN,
+    environment.PGBIN,
+    ...[18, 17, 16, 15, 14].flatMap((version) => [
+      `/opt/homebrew/opt/postgresql@${version}/bin`,
+      `/usr/local/opt/postgresql@${version}/bin`,
+    ]),
+    ...windowsDirectories,
+    ...[18, 17, 16, 15, 14].map(
+      (version) => `/usr/lib/postgresql/${version}/bin`,
+    ),
+    ...pathDirectories,
+  ].filter(
+    (directory, index, directories) =>
+      directory && directories.indexOf(directory) === index,
+  );
+}
+
+function resolvePostgresCommand(name, environment) {
+  const filename = process.platform === "win32" ? `${name}.exe` : name;
+  const directory = postgresBinCandidates(environment).find((candidate) =>
+    existsSync(join(candidate, filename)),
+  );
+
+  return directory ? join(directory, filename) : name;
+}
 
 function requiredEnvironment(name) {
   const value = process.env[name];
@@ -50,7 +108,8 @@ function requireFile(path, description) {
 }
 
 function run(command, argumentsList) {
-  const result = spawnSync(command, argumentsList, {
+  const executable = resolvePostgresCommand(command, process.env);
+  const result = spawnSync(executable, argumentsList, {
     cwd: PROJECT_ROOT,
     env: databaseEnvironment(),
     shell: false,
@@ -60,7 +119,7 @@ function run(command, argumentsList) {
   if (result.error) {
     if (result.error.code === "ENOENT") {
       throw new Error(
-        `${command} was not found. Install PostgreSQL 18 client tools and ensure they are on PATH.`,
+        `${command} was not found. Install PostgreSQL client tools or set POSTGRES_BIN.`,
       );
     }
 

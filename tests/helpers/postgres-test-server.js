@@ -232,6 +232,7 @@ export async function startPostgresTestServer({
       DATABASE_USER,
       DATABASE_PASSWORD: randomUUID(),
       DATABASE_SSL: "false",
+      POSTGRES_BIN: binDirectory,
     }),
 
     applySqlFile(file) {
