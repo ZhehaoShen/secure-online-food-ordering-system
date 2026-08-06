@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(SCRIPT_DIRECTORY, "..");
 const SOURCE_DIRECTORIES = ["scripts", "src", "tests"];
+const CONFIG_FILES = ["vitest.config.js", "vitest.day4.config.js"];
 
 function javascriptFiles(directory) {
   return readdirSync(directory, { withFileTypes: true })
@@ -21,7 +22,7 @@ function javascriptFiles(directory) {
 }
 
 const files = [
-  resolve(PROJECT_ROOT, "vitest.config.js"),
+  ...CONFIG_FILES.map((file) => resolve(PROJECT_ROOT, file)),
   ...SOURCE_DIRECTORIES.flatMap((directory) =>
     javascriptFiles(resolve(PROJECT_ROOT, directory)),
   ),

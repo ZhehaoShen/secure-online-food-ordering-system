@@ -66,6 +66,7 @@ describe.sequential("registration workflow", () => {
   let pool;
   let repository;
   let server;
+  let userService;
 
   beforeAll(async () => {
     databaseServer = await startPostgresTestServer();
@@ -75,7 +76,7 @@ describe.sequential("registration workflow", () => {
       logger: () => {},
     });
     repository = createUserRepository(pool);
-    const userService = createUserService(repository);
+    userService = createUserService(repository);
     const app = createApplication({ userService });
 
     server = startServer({
@@ -117,11 +118,14 @@ describe.sequential("registration workflow", () => {
     expect(html).toContain('href="/register"');
     expect(html).toContain("nav-link is-active");
     expect(html).toContain('autocomplete="new-password"');
+    expect(html).toContain('minlength="12"');
+    expect(html).toContain('maxlength="128"');
+    expect(html).toContain("at least three of: lowercase letters");
     expect(html).not.toContain('name="password" value=');
   });
 
   test("creates a fictional customer and redirects with 303", async () => {
-    const password = randomUUID();
+    const password = "Fictional-Table-2026";
     const email = `registration-${randomUUID()}@example.test`;
     const response = await submitRegistration(baseUrl, {
       name: "  Rowan Fiction  ",
@@ -143,6 +147,44 @@ describe.sequential("registration workflow", () => {
     );
     expect(isSupportedPasswordHash(storedUser.passwordHash)).toBe(true);
     expect(storedUser.passwordHash).not.toContain(password);
+
+    await expect(
+      userService.authenticate({ email, password }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: storedUser.id,
+        email,
+        role: "customer",
+      }),
+    );
+  });
+
+  test.each([
+    ["short", "Short-42"],
+    ["two character groups", "fictionalpassword2026"],
+    ["over the character limit", `Aa1-${"x".repeat(125)}`],
+  ])("rejects a %s registration password without persisting it", async (
+    description,
+    password,
+  ) => {
+    const email = `registration-policy-${description.replaceAll(" ", "-")}@example.test`;
+    const response = await submitRegistration(baseUrl, {
+      name: "Policy Fiction",
+      email,
+      password,
+    });
+    const html = await response.text();
+
+    expect(response.status).toBe(422);
+    expect(html).toContain("at least three of: lowercase letters");
+    expect(html).not.toContain(password);
+    expect(html).not.toContain("password_hash");
+
+    const countResult = await pool.query(
+      "SELECT count(*)::integer AS count FROM users WHERE email = $1",
+      [email],
+    );
+    expect(countResult.rows[0].count).toBe(0);
   });
 
   test("renders a controlled duplicate-account message without sensitive values", async () => {
@@ -167,12 +209,13 @@ describe.sequential("registration workflow", () => {
     expect(html).toContain(
       "An account could not be created with this email.",
     );
-    expect(html).toContain(email.toUpperCase());
+    expect(html).toContain(email);
+    expect(html).not.toContain(email.toUpperCase());
     expect(html).not.toContain(password);
     expect(html).not.toContain("users_email_lower_unique");
     expect(html).not.toContain("password_hash");
     expect(html).not.toContain("DatabaseUnavailableError");
-    expect(html).not.toContain(" at ");
+    expect(html).not.toContain("\n    at ");
 
     const countResult = await pool.query(
       "SELECT count(*)::integer AS count FROM users WHERE email = $1",

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { createApplication } from "../../src/app.js";
 import { readSessionConfig } from "../../src/config/session.js";
@@ -25,6 +25,7 @@ const PROJECT_ROOT = resolve(TEST_DIRECTORY, "../..");
 const SCHEMA_FILE = resolve(PROJECT_ROOT, "db/schema.sql");
 const SESSION_SCHEMA_FILE = resolve(PROJECT_ROOT, "db/session-schema.sql");
 const COOKIE_NAME = "food_ordering_test_sid";
+const TEST_CLOCK_OFFSET_MILLISECONDS = 1_000;
 
 function closeServer(server) {
   return new Promise((resolveClose, rejectClose) => {
@@ -79,6 +80,7 @@ async function submitLogin(baseUrl, email, password) {
 
 describe.sequential("authentication workflow", () => {
   let baseUrl;
+  let authenticationNow;
   let customer;
   let customerEmail;
   let customerPassword;
@@ -87,6 +89,7 @@ describe.sequential("authentication workflow", () => {
   let server;
   let sessionCookie;
   let sessionStore;
+  let userService;
 
   beforeAll(async () => {
     databaseServer = await startPostgresTestServer();
@@ -98,7 +101,9 @@ describe.sequential("authentication workflow", () => {
     });
 
     const userRepository = createUserRepository(pool);
-    const userService = createUserService(userRepository);
+    userService = createUserService(userRepository, {
+      clock: () => new Date(authenticationNow),
+    });
     customerEmail = `login-${randomUUID()}@example.test`;
     customerPassword = randomUUID();
     customer = await userService.createCustomer({
@@ -106,6 +111,9 @@ describe.sequential("authentication workflow", () => {
       email: customerEmail,
       password: customerPassword,
     });
+    authenticationNow = new Date(
+      customer.createdAt.getTime() + TEST_CLOCK_OFFSET_MILLISECONDS,
+    );
 
     const sessionConfig = readSessionConfig({
       SESSION_SECRET: `${randomUUID()}${randomUUID()}`,
@@ -177,16 +185,31 @@ describe.sequential("authentication workflow", () => {
   });
 
   test("uses the same controlled response for unknown users and incorrect passwords", async () => {
-    const wrongPasswordResponse = await submitLogin(
-      baseUrl,
-      customerEmail,
-      randomUUID(),
-    );
-    const unknownUserResponse = await submitLogin(
-      baseUrl,
-      `unknown-${randomUUID()}@example.test`,
-      randomUUID(),
-    );
+    const wrongPassword = `wrong-${randomUUID()}`;
+    const unknownEmail = `unknown-${randomUUID()}@example.test`;
+    const unknownPassword = `unknown-${randomUUID()}`;
+    const capturedLogs = [];
+    const logSpy = vi.spyOn(console, "log").mockImplementation((value) => {
+      capturedLogs.push(value);
+    });
+    let wrongPasswordResponse;
+    let unknownUserResponse;
+
+    try {
+      wrongPasswordResponse = await submitLogin(
+        baseUrl,
+        customerEmail,
+        wrongPassword,
+      );
+      unknownUserResponse = await submitLogin(
+        baseUrl,
+        unknownEmail,
+        unknownPassword,
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
+
     const wrongPasswordHtml = await wrongPasswordResponse.text();
     const unknownUserHtml = await unknownUserResponse.text();
 
@@ -200,6 +223,84 @@ describe.sequential("authentication workflow", () => {
     );
     expect(wrongPasswordHtml).not.toContain("password_hash");
     expect(unknownUserHtml).not.toContain("DatabaseUnavailableError");
+    const serializedLogs = JSON.stringify(capturedLogs);
+    expect(serializedLogs).not.toContain(customerEmail);
+    expect(serializedLogs).not.toContain(wrongPassword);
+    expect(serializedLogs).not.toContain(unknownEmail);
+    expect(serializedLogs).not.toContain(unknownPassword);
+    expect(serializedLogs).not.toContain("password_hash");
+  });
+
+  test("applies a bounded temporary lock and resets safely after expiry", async () => {
+    const lockoutEmail = `lockout-${randomUUID()}@example.test`;
+    const lockoutPassword = `Lockout-Fictional-${randomUUID()}!`;
+    const lockoutUser = await userService.createCustomer({
+      name: "Lockout Workflow Fiction",
+      email: lockoutEmail,
+      password: lockoutPassword,
+    });
+    authenticationNow = new Date(
+      lockoutUser.createdAt.getTime() + TEST_CLOCK_OFFSET_MILLISECONDS,
+    );
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const response = await submitLogin(
+        baseUrl,
+        lockoutEmail,
+        `Wrong-Lockout-${attempt}!`,
+      );
+      expect(response.status).toBe(401);
+      expect(await response.text()).toContain(
+        "Email or password is incorrect.",
+      );
+    }
+
+    const lockedResult = await pool.query(
+      `
+        SELECT failed_login_count, locked_until
+        FROM users
+        WHERE id = $1
+      `,
+      [lockoutUser.id],
+    );
+    expect(lockedResult.rows[0].failed_login_count).toBe(5);
+    expect(lockedResult.rows[0].locked_until).toEqual(
+      new Date(authenticationNow.getTime() + 5 * 60 * 1_000),
+    );
+
+    const protectedResponse = await submitLogin(
+      baseUrl,
+      lockoutEmail,
+      lockoutPassword,
+    );
+    const protectedHtml = await protectedResponse.text();
+    expect(protectedResponse.status).toBe(401);
+    expect(protectedHtml).toContain("Email or password is incorrect.");
+    expect(protectedHtml).not.toContain("locked");
+    expect(protectedHtml).not.toContain(lockoutPassword);
+
+    authenticationNow = new Date(
+      authenticationNow.getTime() + 5 * 60 * 1_000,
+    );
+    await expect(userService.authenticate({
+      email: lockoutEmail,
+      password: lockoutPassword,
+    })).resolves.toEqual(
+      expect.objectContaining({ id: lockoutUser.id }),
+    );
+
+    const resetResult = await pool.query(
+      `
+        SELECT failed_login_count, locked_until
+        FROM users
+        WHERE id = $1
+      `,
+      [lockoutUser.id],
+    );
+    expect(resetResult.rows[0]).toEqual({
+      failed_login_count: 0,
+      locked_until: null,
+    });
   });
 
   test("persists only the minimum authenticated identity in PostgreSQL", async () => {

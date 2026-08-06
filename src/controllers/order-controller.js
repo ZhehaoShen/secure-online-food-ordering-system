@@ -5,6 +5,7 @@ import {
   OrderNotFoundError,
 } from "../services/order-service.js";
 import { saveSession } from "../session/persistence.js";
+import { RequestValidationError } from "../validation/request.js";
 import { renderCart } from "./cart-controller.js";
 
 function controlledOrderError(error) {
@@ -66,7 +67,7 @@ export function createOrderController({ cartService, orderService }) {
       try {
         const order = await orderService.getCustomerOrder({
           userId: request.authenticatedUser.id,
-          orderId: request.params.orderId,
+          orderId: request.validatedInput.params.orderId,
         });
 
         response.status(200).render("order-detail", {
@@ -85,6 +86,22 @@ export function createOrderController({ cartService, orderService }) {
           order: null,
         });
       }
+    },
+
+    invalidOrderDetailInput(error, _request, response, next) {
+      if (
+        !(error instanceof RequestValidationError) ||
+        error.field !== "orderId"
+      ) {
+        next(error);
+        return;
+      }
+
+      response.status(404).render("order-detail", {
+        pageTitle: "Order not found",
+        activePath: "/orders",
+        order: null,
+      });
     },
 
     async checkout(request, response) {
@@ -110,6 +127,19 @@ export function createOrderController({ cartService, orderService }) {
           errors: [error.message],
         });
       }
+    },
+
+    async invalidCheckoutInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+
+      const cart = await cartService.getCart(request.session.cart);
+      renderCart(response, cart, {
+        statusCode: error.statusCode,
+        errors: [error.message],
+      });
     },
   });
 }

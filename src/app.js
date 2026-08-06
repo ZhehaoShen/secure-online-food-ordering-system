@@ -14,6 +14,11 @@ import { registerCartRoutes } from "./routes/cart-routes.js";
 import { registerMenuRoutes } from "./routes/menu-routes.js";
 import { registerOrderRoutes } from "./routes/order-routes.js";
 import { registerRegistrationRoutes } from "./routes/registration-routes.js";
+import {
+  MAXIMUM_URLENCODED_BODY_BYTES,
+  MAXIMUM_URLENCODED_PARAMETERS,
+  normalizeRequestParsingError,
+} from "./validation/request.js";
 
 const SERVICE_NAME = "secure-online-food-ordering-system";
 const SOURCE_DIRECTORY = dirname(fileURLToPath(import.meta.url));
@@ -25,6 +30,7 @@ const ERROR_PAGE_TITLES = Object.freeze({
   403: "Access denied",
   404: "Page not found",
   409: "Request conflict",
+  413: "Request too large",
   422: "Check your request",
   500: "Unexpected error",
   503: "Service unavailable",
@@ -108,9 +114,12 @@ export function createApplication({
 
   app.use(express.urlencoded({
     extended: false,
-    limit: "16kb",
-    parameterLimit: 12,
+    limit: MAXIMUM_URLENCODED_BODY_BYTES,
+    parameterLimit: MAXIMUM_URLENCODED_PARAMETERS,
   }));
+  app.use((error, _request, _response, next) => {
+    next(normalizeRequestParsingError(error));
+  });
 
   if (sessionMiddleware) {
     app.use(sessionMiddleware);

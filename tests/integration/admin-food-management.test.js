@@ -261,7 +261,7 @@ describe.sequential("administrator food management", () => {
     expect(newForm.response.status).toBe(200);
     expect(newForm.html).toContain("Create food item");
 
-    const response = await postForm(
+    const tampered = await postForm(
       baseUrl,
       "/admin/food-items",
       {
@@ -272,6 +272,21 @@ describe.sequential("administrator food management", () => {
         isAvailable: "on",
         id: "999999",
         role: "customer",
+      },
+      adminCookie,
+    );
+    expect(tampered.status).toBe(422);
+    expect(auditEvents).toHaveLength(0);
+
+    const response = await postForm(
+      baseUrl,
+      "/admin/food-items",
+      {
+        name: "Aurora Test Tart",
+        category: "Desserts",
+        description: "A fictional berry tart for administrator testing.",
+        price: "8.75",
+        isAvailable: "on",
       },
       adminCookie,
     );
@@ -334,7 +349,7 @@ describe.sequential("administrator food management", () => {
     const html = await response.text();
 
     expect(response.status).toBe(422);
-    expect(html).toContain("The food details are invalid.");
+    expect(html).toContain("A request field is outside the allowed range.");
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).not.toMatch(

@@ -2,6 +2,7 @@ import {
   DuplicateAccountError,
   UserInputError,
 } from "../services/user-service.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const INVALID_DETAILS_MESSAGE =
   "Enter a valid name, email address, password, and matching confirmation.";
@@ -59,9 +60,10 @@ export function createRegistrationController(userService) {
         return;
       }
 
-      const values = formValues(request.body);
+      const input = request.validatedInput.body;
+      const values = formValues(input);
 
-      if (!passwordsMatch(request.body)) {
+      if (!passwordsMatch(input)) {
         renderRegistration(response, {
           statusCode: 422,
           values,
@@ -72,9 +74,9 @@ export function createRegistrationController(userService) {
 
       try {
         await userService.createCustomer({
-          name: request.body?.name,
-          email: request.body?.email,
-          password: request.body?.password,
+          name: input.name,
+          email: input.email,
+          password: input.password,
         });
       } catch (error) {
         if (error instanceof DuplicateAccountError) {
@@ -99,6 +101,23 @@ export function createRegistrationController(userService) {
       }
 
       response.redirect(303, "/login?registered=1");
+    },
+
+    invalidInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+
+      const missingPassword = error.reason === "missing" &&
+        ["password", "passwordConfirmation"].includes(error.field);
+      renderRegistration(response, {
+        statusCode: 422,
+        values: formValues(request.body),
+        errors: [missingPassword
+          ? PASSWORD_MISMATCH_MESSAGE
+          : INVALID_DETAILS_MESSAGE],
+      });
     },
   });
 }

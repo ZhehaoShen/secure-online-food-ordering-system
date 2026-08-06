@@ -4,6 +4,7 @@ import {
   CartInputError,
   CartItemNotFoundError,
 } from "../services/cart-service.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const cadCurrency = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -58,12 +59,14 @@ export function createCartController(cartService) {
     },
 
     async add(request, response) {
+      const input = request.validatedInput.body;
+
       try {
         request.session.cart = await cartService.addItem(
           request.session.cart,
           {
-            foodItemId: request.body?.foodItemId,
-            quantity: request.body?.quantity,
+            foodItemId: input.foodItemId,
+            quantity: String(input.quantity),
           },
         );
         await saveSession(request);
@@ -78,12 +81,14 @@ export function createCartController(cartService) {
     },
 
     async update(request, response) {
+      const input = request.validatedInput;
+
       try {
         request.session.cart = await cartService.updateItem(
           request.session.cart,
           {
-            foodItemId: request.params.foodItemId,
-            quantity: request.body?.quantity,
+            foodItemId: input.params.foodItemId,
+            quantity: String(input.body.quantity),
           },
         );
         await saveSession(request);
@@ -98,11 +103,13 @@ export function createCartController(cartService) {
     },
 
     async remove(request, response) {
+      const input = request.validatedInput;
+
       try {
         request.session.cart = cartService.removeItem(
           request.session.cart,
           {
-            foodItemId: request.params.foodItemId,
+            foodItemId: input.params.foodItemId,
           },
         );
         await saveSession(request);
@@ -114,6 +121,15 @@ export function createCartController(cartService) {
 
         await renderError(request, response, error);
       }
+    },
+
+    async invalidInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+
+      await renderError(request, response, error);
     },
   });
 }

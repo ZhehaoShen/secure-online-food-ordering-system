@@ -312,7 +312,7 @@ describe.sequential("administrator order review", () => {
   });
 
   test("applies valid status transitions with server-owned actor and state", async () => {
-    const preparing = await postForm(
+    const tampered = await postForm(
       baseUrl,
       `/admin/orders/${morganOrder.id}/status`,
       {
@@ -321,6 +321,20 @@ describe.sequential("administrator order review", () => {
         role: "customer",
         currentStatus: "cancelled",
       },
+      adminCookie,
+    );
+    expect(tampered.status).toBe(422);
+    expect(auditEvents).toHaveLength(0);
+    const unchanged = await pool.query(
+      "SELECT status FROM orders WHERE id = $1",
+      [morganOrder.id],
+    );
+    expect(unchanged.rows[0].status).toBe("confirmed");
+
+    const preparing = await postForm(
+      baseUrl,
+      `/admin/orders/${morganOrder.id}/status`,
+      { status: "preparing" },
       adminCookie,
     );
     expect(preparing.status).toBe(303);

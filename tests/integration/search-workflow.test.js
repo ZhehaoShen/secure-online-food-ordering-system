@@ -18,6 +18,8 @@ const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(TEST_DIRECTORY, "../..");
 const SCHEMA_FILE = resolve(PROJECT_ROOT, "db/schema.sql");
 const SEED_FILE = resolve(PROJECT_ROOT, "db/seed.sql");
+const APPROVED_SQL_INJECTION_PAYLOAD =
+  "does-not-match%' OR '1'='1' -- ";
 
 function closeServer(server) {
   return new Promise((resolveClose, rejectClose) => {
@@ -157,6 +159,31 @@ describe.sequential("food search workflow", () => {
     expect(result.html).not.toContain("SearchQueryError");
     expect(result.html).not.toContain("DatabaseUnavailableError");
     expect(result.html).not.toContain(" at ");
+  });
+
+  test("treats the matched SQL-injection payload as a search value", async () => {
+    const before = await pool.query(
+      "SELECT count(*)::integer AS count FROM food_items",
+    );
+    const result = await search(baseUrl, {
+      q: APPROVED_SQL_INJECTION_PAYLOAD,
+    });
+    const after = await pool.query(
+      "SELECT count(*)::integer AS count FROM food_items",
+    );
+
+    expect(result.response.status).toBe(200);
+    expect(result.html).toContain("0 results");
+    expect(result.html).toContain(
+      "No available dishes match these filters.",
+    );
+    expect(result.html).not.toContain("Harbour Veggie Wrap");
+    expect(result.html).not.toContain("Northern Berry Fizz");
+    expect(result.html).not.toMatch(
+      /PostgreSQL|syntax error|food_items|DatabaseUnavailableError|stack trace/i,
+    );
+    expect(after.rows[0]).toEqual(before.rows[0]);
+    expect(before.rows[0].count).toBe(6);
   });
 
   test("keeps search values in parameters and converts failures to a safe browser response", async () => {

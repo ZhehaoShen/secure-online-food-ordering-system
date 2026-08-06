@@ -53,5 +53,5 @@ jobs:
       - name: Check JavaScript syntax
         run: npm run check:syntax
 
-      - name: Run Day 2 and Day 3 tests
-        run: npm run test:day3
+      - name: Run secure Day 2 through Day 4 tests
+        run: npm run test:day4

@@ -8,11 +8,54 @@ const FIND_ACTIVE_USER_BY_EMAIL_QUERY = {
       name,
       email,
       password_hash,
-      role
+      role,
+      failed_login_count,
+      locked_until
     FROM users
     WHERE lower(email) = lower($1)
       AND disabled_at IS NULL
     LIMIT 1
+  `,
+};
+
+const RECORD_AUTHENTICATION_FAILURE_QUERY = {
+  name: "users-record-authentication-failure",
+  text: `
+    WITH current_failure AS (
+      SELECT
+        id,
+        CASE
+          WHEN locked_until IS NOT NULL AND locked_until <= $2 THEN 1
+          ELSE LEAST(failed_login_count + 1, $3)
+        END AS next_count
+      FROM users
+      WHERE id = $1
+        AND disabled_at IS NULL
+      FOR UPDATE
+    )
+    UPDATE users AS target_user
+    SET
+      failed_login_count = current_failure.next_count,
+      locked_until = CASE
+        WHEN current_failure.next_count >= $3 THEN $4::timestamptz
+        ELSE NULL
+      END,
+      updated_at = $2
+    FROM current_failure
+    WHERE target_user.id = current_failure.id
+  `,
+};
+
+const RESET_AUTHENTICATION_FAILURES_QUERY = {
+  name: "users-reset-authentication-failures",
+  text: `
+    UPDATE users
+    SET
+      failed_login_count = 0,
+      locked_until = NULL,
+      updated_at = $2
+    WHERE id = $1
+      AND disabled_at IS NULL
   `,
 };
 
@@ -53,6 +96,8 @@ function mapAuthenticationUser(row) {
     email: row.email,
     passwordHash: row.password_hash,
     role: row.role,
+    failedLoginCount: row.failed_login_count,
+    lockedUntil: row.locked_until,
   });
 }
 
@@ -104,6 +149,33 @@ export function createUserRepository(pool) {
           throw new DuplicateUserError();
         }
 
+        throw new DatabaseUnavailableError(error);
+      }
+    },
+
+    async recordAuthenticationFailure({
+      userId,
+      attemptedAt,
+      threshold,
+      lockedUntil,
+    }) {
+      try {
+        await pool.query({
+          ...RECORD_AUTHENTICATION_FAILURE_QUERY,
+          values: [userId, attemptedAt, threshold, lockedUntil],
+        });
+      } catch (error) {
+        throw new DatabaseUnavailableError(error);
+      }
+    },
+
+    async resetAuthenticationFailures({ userId, authenticatedAt }) {
+      try {
+        await pool.query({
+          ...RESET_AUTHENTICATION_FAILURES_QUERY,
+          values: [userId, authenticatedAt],
+        });
+      } catch (error) {
         throw new DatabaseUnavailableError(error);
       }
     },

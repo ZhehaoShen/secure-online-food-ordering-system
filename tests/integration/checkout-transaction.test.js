@@ -287,7 +287,7 @@ describe.sequential("transactional checkout", () => {
     expect(cartBeforeCheckout.html).toContain('action="/orders"');
     expect(cartBeforeCheckout.html).toContain("Place order");
 
-    const response = await postForm(
+    const tamperedResponse = await postForm(
       baseUrl,
       "/orders",
       {
@@ -299,6 +299,21 @@ describe.sequential("transactional checkout", () => {
       },
       cookie,
     );
+
+    expect(tamperedResponse.status).toBe(422);
+    expect(await tamperedResponse.text()).toContain("unexpected field");
+    expect(await customerOrderCounts()).toEqual({
+      order_count: 0,
+      item_count: 0,
+    });
+    expect(await storedCart()).toEqual({
+      items: {
+        [bowl.id]: 2,
+        [drink.id]: 1,
+      },
+    });
+
+    const response = await postForm(baseUrl, "/orders", {}, cookie);
 
     expect(response.status).toBe(303);
     const location = response.headers.get("location");

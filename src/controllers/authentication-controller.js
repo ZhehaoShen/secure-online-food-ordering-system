@@ -2,6 +2,7 @@ import {
   destroySession,
   saveSession,
 } from "../session/persistence.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const INVALID_LOGIN_MESSAGE = "Email or password is incorrect.";
 
@@ -48,7 +49,7 @@ export function createAuthenticationController(
       }
 
       renderLogin(response, {
-        notice: noticeFromQuery(request.query),
+        notice: noticeFromQuery(request.validatedInput.query),
       });
     },
 
@@ -58,10 +59,11 @@ export function createAuthenticationController(
         return;
       }
 
-      const email = safeEmailValue(request.body?.email);
+      const input = request.validatedInput.body;
+      const email = safeEmailValue(input.email);
       const user = await userService.authenticate({
-        email: request.body?.email,
-        password: request.body?.password,
+        email: input.email,
+        password: input.password,
       });
 
       if (!user) {
@@ -84,6 +86,19 @@ export function createAuthenticationController(
       });
       await saveSession(request);
       response.redirect(303, "/");
+    },
+
+    invalidInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+
+      renderLogin(response, {
+        statusCode: 401,
+        email: safeEmailValue(request.body?.email),
+        errors: [INVALID_LOGIN_MESSAGE],
+      });
     },
 
     async destroy(request, response) {

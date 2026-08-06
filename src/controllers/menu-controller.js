@@ -1,4 +1,5 @@
 import { SearchQueryError } from "../services/menu-service.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const cadCurrency = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -47,8 +48,9 @@ function renderSearch(response, {
 export function createMenuController(menuService) {
   return Object.freeze({
     async show(request, response) {
+      const input = request.validatedInput.query;
       const menu = await menuService.getMenu({
-        category: request.query.category,
+        category: input.category,
       });
 
       response.status(200).render("menu", {
@@ -61,10 +63,12 @@ export function createMenuController(menuService) {
     },
 
     async search(request, response) {
+      const input = request.validatedInput.query;
+
       try {
         const search = await menuService.getSearchResults({
-          query: request.query.q,
-          category: request.query.category,
+          query: input.q,
+          category: input.category,
         });
 
         renderSearch(response, search);
@@ -75,14 +79,28 @@ export function createMenuController(menuService) {
 
         renderSearch(response, {
           statusCode: 422,
-          query: safeSearchValue(request.query.q, 120),
+          query: safeSearchValue(input.q, 120),
           selectedCategory: safeSearchValue(
-            request.query.category,
+            input.category,
             80,
           ),
           errors: ["Enter a search term and category within the allowed lengths."],
         });
       }
+    },
+
+    invalidSearchInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+
+      renderSearch(response, {
+        statusCode: 422,
+        query: safeSearchValue(request.query.q, 120),
+        selectedCategory: safeSearchValue(request.query.category, 80),
+        errors: ["Enter a search term and category within the allowed lengths."],
+      });
     },
   });
 }

@@ -4,6 +4,7 @@ import {
   AdminOrderNotFoundError,
   AdminOrderTransitionError,
 } from "../services/admin-order-service.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const cadCurrency = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -90,7 +91,7 @@ function renderDetail(response, {
 export function createAdminOrderController(adminOrderService) {
   async function loadDetail(request) {
     return adminOrderService.getOrder({
-      orderId: request.params.orderId,
+      orderId: request.validatedInput?.params?.orderId ?? request.params.orderId,
     });
   }
 
@@ -98,7 +99,7 @@ export function createAdminOrderController(adminOrderService) {
     async index(request, response) {
       try {
         const result = await adminOrderService.listOrders({
-          status: request.query.status,
+          status: request.validatedInput.query.status,
         });
         renderList(response, result);
       } catch (error) {
@@ -118,7 +119,7 @@ export function createAdminOrderController(adminOrderService) {
         const order = await loadDetail(request);
         renderDetail(response, {
           order,
-          notice: request.query.notice === "updated"
+          notice: request.validatedInput.query.notice === "updated"
             ? "The order status was updated."
             : null,
         });
@@ -132,11 +133,12 @@ export function createAdminOrderController(adminOrderService) {
     },
 
     async updateStatus(request, response) {
+      const input = request.validatedInput;
       try {
         const updated = await adminOrderService.updateOrderStatus({
           actorUserId: request.authenticatedUser.id,
-          orderId: request.params.orderId,
-          status: request.body?.status,
+          orderId: input.params.orderId,
+          status: input.body.status,
         });
         response.redirect(
           303,
@@ -169,6 +171,51 @@ export function createAdminOrderController(adminOrderService) {
 
           renderDetail(response, { statusCode: 404 });
         }
+      }
+    },
+
+    invalidListInput(error, _request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+      renderList(response, {
+        statusCode: 422,
+        errors: ["The order status is invalid."],
+      });
+    },
+
+    invalidDetailInput(error, _request, response, next) {
+      if (!(error instanceof RequestValidationError) || error.field !== "orderId") {
+        next(error);
+        return;
+      }
+      renderDetail(response, { statusCode: 404 });
+    },
+
+    async invalidStatusInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+      if (error.field === "orderId") {
+        renderDetail(response, { statusCode: 404 });
+        return;
+      }
+      try {
+        const order = await loadDetail(request);
+        renderDetail(response, {
+          order,
+          statusCode: 422,
+          errors: [error.field === "status"
+            ? "The order status is invalid."
+            : error.message],
+        });
+      } catch (loadError) {
+        if (!(loadError instanceof AdminOrderNotFoundError)) {
+          throw loadError;
+        }
+        renderDetail(response, { statusCode: 404 });
       }
     },
   });

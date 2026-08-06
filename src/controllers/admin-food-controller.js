@@ -2,6 +2,7 @@ import {
   FoodItemNotFoundError,
   FoodManagementInputError,
 } from "../services/food-management-service.js";
+import { RequestValidationError } from "../validation/request.js";
 
 const cadCurrency = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -96,8 +97,9 @@ export function createAdminFoodController(foodManagementService) {
   return Object.freeze({
     async index(request, response) {
       const foods = await foodManagementService.listFoods();
-      const notice = typeof request.query.notice === "string"
-        ? NOTICES[request.query.notice] ?? null
+      const noticeValue = request.validatedInput.query.notice;
+      const notice = typeof noticeValue === "string"
+        ? NOTICES[noticeValue] ?? null
         : null;
 
       response.status(200).render("admin-food-items", {
@@ -116,10 +118,11 @@ export function createAdminFoodController(foodManagementService) {
     },
 
     async create(request, response) {
+      const input = request.validatedInput.body;
       try {
         await foodManagementService.createFood({
           actorUserId: request.authenticatedUser.id,
-          input: request.body,
+          input,
         });
         response.redirect(303, "/admin/food-items?notice=created");
       } catch (error) {
@@ -139,7 +142,7 @@ export function createAdminFoodController(foodManagementService) {
     async editForm(request, response) {
       try {
         const food = await foodManagementService.getFood({
-          foodItemId: request.params.foodItemId,
+          foodItemId: request.validatedInput.params.foodItemId,
         });
         renderForm(response, {
           mode: "edit",
@@ -156,11 +159,12 @@ export function createAdminFoodController(foodManagementService) {
     },
 
     async update(request, response) {
+      const input = request.validatedInput;
       try {
         await foodManagementService.updateFood({
           actorUserId: request.authenticatedUser.id,
-          foodItemId: request.params.foodItemId,
-          input: request.body,
+          foodItemId: input.params.foodItemId,
+          input: input.body,
         });
         response.redirect(303, "/admin/food-items?notice=updated");
       } catch (error) {
@@ -168,7 +172,7 @@ export function createAdminFoodController(foodManagementService) {
           renderForm(response, {
             mode: "edit",
             form: submittedForm(request.body),
-            foodItemId: request.params.foodItemId,
+            foodItemId: input.params.foodItemId,
             errors: [error.message],
             statusCode: error.statusCode,
           });
@@ -188,7 +192,7 @@ export function createAdminFoodController(foodManagementService) {
       try {
         await foodManagementService.disableFood({
           actorUserId: request.authenticatedUser.id,
-          foodItemId: request.params.foodItemId,
+          foodItemId: request.validatedInput.params.foodItemId,
         });
         response.redirect(303, "/admin/food-items?notice=disabled");
       } catch (error) {
@@ -198,6 +202,41 @@ export function createAdminFoodController(foodManagementService) {
 
         renderMissing(response);
       }
+    },
+
+    invalidCreateInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+      renderForm(response, {
+        mode: "create", form: submittedForm(request.body),
+        errors: [error.message], statusCode: error.statusCode,
+      });
+    },
+
+    invalidUpdateInput(error, request, response, next) {
+      if (!(error instanceof RequestValidationError)) {
+        next(error);
+        return;
+      }
+      if (error.field === "foodItemId") {
+        renderMissing(response);
+        return;
+      }
+      renderForm(response, {
+        mode: "edit", form: submittedForm(request.body),
+        foodItemId: request.params.foodItemId,
+        errors: [error.message], statusCode: error.statusCode,
+      });
+    },
+
+    invalidIdentifierInput(error, _request, response, next) {
+      if (!(error instanceof RequestValidationError) || error.field !== "foodItemId") {
+        next(error);
+        return;
+      }
+      renderMissing(response);
     },
   });
 }

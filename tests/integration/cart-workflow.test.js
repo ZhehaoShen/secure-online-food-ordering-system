@@ -200,9 +200,9 @@ describe.sequential("session-backed cart workflow", () => {
     expect(menu.html).toContain("Add to cart");
   });
 
-  test("adds a server-priced item and ignores client-owned fields", async () => {
+  test("rejects client-owned fields, then adds a server-priced item", async () => {
     const food = foods["Maple Garden Bowl"];
-    const response = await postForm(
+    const tamperedResponse = await postForm(
       baseUrl,
       "/cart/items",
       {
@@ -213,6 +213,24 @@ describe.sequential("session-backed cart workflow", () => {
         userId: "999",
         role: "admin",
         status: "completed",
+      },
+      cookie,
+    );
+
+    expect(tamperedResponse.status).toBe(422);
+    expect(await tamperedResponse.text()).toContain(
+      "unexpected field",
+    );
+
+    const emptyCart = await getHtml(baseUrl, "/cart", cookie);
+    expect(emptyCart.html).toContain("Your cart has no available foods.");
+
+    const response = await postForm(
+      baseUrl,
+      "/cart/items",
+      {
+        foodItemId: food.id,
+        quantity: "2",
       },
       cookie,
     );
@@ -372,11 +390,11 @@ describe.sequential("session-backed cart workflow", () => {
     );
     expect(invalidIdResponse.status).toBe(422);
     expect(await invalidIdResponse.text()).toContain(
-      "The cart item or quantity is invalid.",
+      "A request field is malformed.",
     );
     expect(invalidQuantityResponse.status).toBe(422);
     expect(await invalidQuantityResponse.text()).toContain(
-      "The cart item or quantity is invalid.",
+      "A request field is outside the allowed range.",
     );
     expect(missingUpdateResponse.status).toBe(404);
     expect(await missingUpdateResponse.text()).toContain(

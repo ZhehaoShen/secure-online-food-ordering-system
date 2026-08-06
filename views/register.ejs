@@ -60,12 +60,14 @@
             name="password"
             type="password"
             autocomplete="new-password"
-            maxlength="1024"
+            minlength="12"
+            maxlength="128"
             aria-describedby="password-help"
             required
           >
           <p id="password-help" class="field-help">
-            Used only for this fictional local account.
+            Use 12–128 characters and at least three of: lowercase letters,
+            uppercase letters, numbers, and symbols. Spaces are allowed.
           </p>
         </div>
 
@@ -76,7 +78,8 @@
             name="passwordConfirmation"
             type="password"
             autocomplete="new-password"
-            maxlength="1024"
+            minlength="12"
+            maxlength="128"
             required
           >
         </div>
