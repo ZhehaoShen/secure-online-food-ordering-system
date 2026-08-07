@@ -5,10 +5,11 @@ import { spawnSync } from "node:child_process";
 
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(SCRIPT_DIRECTORY, "..");
+const ROLES_FILE = resolve(PROJECT_ROOT, "db", "roles.sql");
 const SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "schema.sql");
 const SESSION_SCHEMA_FILE = resolve(PROJECT_ROOT, "db", "session-schema.sql");
 const SEED_FILE = resolve(PROJECT_ROOT, "db", "seed.sql");
-const SUPPORTED_TASKS = new Set(["migrate", "seed", "backup", "restore"]);
+const SUPPORTED_TASKS = new Set(["roles", "migrate", "seed", "backup", "restore"]);
 
 function versionDirectories(rootDirectory) {
   if (!rootDirectory || !existsSync(rootDirectory)) {
@@ -88,7 +89,7 @@ function databaseEnvironment() {
   };
 }
 
-function connectionArguments() {
+function connectionArguments({ dbName } = {}) {
   return [
     "--host",
     process.env.DATABASE_HOST || "127.0.0.1",
@@ -97,7 +98,7 @@ function connectionArguments() {
     "--username",
     requiredEnvironment("MIGRATION_DATABASE_USER"),
     "--dbname",
-    process.env.DATABASE_NAME || "food_ordering_dev",
+    dbName || process.env.RESTORE_DATABASE_NAME || process.env.DATABASE_NAME || "food_ordering_dev",
   ];
 }
 
@@ -129,6 +130,17 @@ function run(command, argumentsList) {
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+function runRoles() {
+  requireFile(ROLES_FILE, "Database roles SQL");
+  run("psql", [
+    ...connectionArguments(),
+    "--set",
+    "ON_ERROR_STOP=1",
+    "--file",
+    ROLES_FILE,
+  ]);
 }
 
 function runMigration() {
@@ -185,34 +197,38 @@ function runBackup() {
 
 function runRestore() {
   const input = process.argv[3];
+  const targetDb = process.argv[4] || process.env.RESTORE_DATABASE_NAME;
 
   if (!input) {
     throw new Error(
-      "Provide a backup path: npm run db:restore -- <backup-file>",
+      "Provide a backup path: npm run db:restore -- <backup-file> [target-database-name]",
     );
   }
 
   const backupFile = isAbsolute(input) ? input : resolve(PROJECT_ROOT, input);
   requireFile(backupFile, "Database backup");
   run("pg_restore", [
-    ...connectionArguments(),
+    ...connectionArguments({ dbName: targetDb }),
     "--clean",
     "--if-exists",
     "--no-owner",
     "--exit-on-error",
     backupFile,
   ]);
+  console.log(`Database restore completed from: ${backupFile}${targetDb ? ` into database: ${targetDb}` : ""}`);
 }
 
 const task = process.argv[2];
 
 if (!SUPPORTED_TASKS.has(task)) {
   throw new Error(
-    "Choose one database task: migrate, seed, backup, or restore.",
+    "Choose one database task: roles, migrate, seed, backup, or restore.",
   );
 }
 
-if (task === "migrate") {
+if (task === "roles") {
+  runRoles();
+} else if (task === "migrate") {
   runMigration();
 } else if (task === "seed") {
   runSeed();

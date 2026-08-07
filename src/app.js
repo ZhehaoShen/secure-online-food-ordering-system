@@ -8,6 +8,7 @@ import { publicErrorDetails } from "./errors.js";
 import { logEvent } from "./logger.js";
 import { exposeAuthenticatedUser } from "./middleware/authentication.js";
 import { csrfProtectionMiddleware } from "./middleware/csrf.js";
+import { registerAdminAuditRoutes } from "./routes/admin-audit-routes.js";
 import { registerAdminFoodRoutes } from "./routes/admin-food-routes.js";
 import { registerAdminOrderRoutes } from "./routes/admin-order-routes.js";
 import { registerAuthenticationRoutes } from "./routes/authentication-routes.js";
@@ -60,6 +61,8 @@ function renderErrorPage(response, {
 
 export function createApplication({
   adminOrderService,
+  auditRepository,
+  auditRecorder,
   cartService,
   foodManagementService,
   registerRoutes,
@@ -77,6 +80,7 @@ export function createApplication({
   app.locals.currentYear = new Date().getUTCFullYear();
   app.locals.currentUser = null;
   app.locals.csrfToken = "";
+  app.locals.auditRecorder = auditRecorder || null;
 
   app.use((request, response, next) => {
     const requestId = randomUUID();
@@ -148,6 +152,7 @@ export function createApplication({
     registerAuthenticationRoutes(app, {
       userService,
       sessionCookie,
+      auditRecorder,
     });
   }
 
@@ -168,6 +173,10 @@ export function createApplication({
 
   if (adminOrderService && sessionMiddleware) {
     registerAdminOrderRoutes(app, { adminOrderService });
+  }
+
+  if (auditRepository && sessionMiddleware) {
+    registerAdminAuditRoutes(app, { auditRepository });
   }
 
   if (registerRoutes) {

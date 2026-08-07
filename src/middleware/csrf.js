@@ -21,6 +21,21 @@ export function csrfProtectionMiddleware(request, response, next) {
       request.get("x-csrf-token");
 
     if (!verifyCsrfToken(request.session, providedToken)) {
+      const actorUserId = request.authenticatedUser?.id ?? null;
+      const auditRecorder = request.app?.locals?.auditRecorder;
+      if (auditRecorder && typeof auditRecorder.record === "function") {
+        auditRecorder.record({
+          action: "security.csrf_rejected",
+          actorUserId,
+          entityType: "request",
+          entityId: null,
+          result: "denied",
+          details: {
+            method: request.method,
+            path: request.path,
+          },
+        }).catch(() => {});
+      }
       next(new InvalidCsrfTokenError());
       return;
     }

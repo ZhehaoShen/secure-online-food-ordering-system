@@ -1,5 +1,15 @@
+const inMemoryLogs = [];
+
 export const deferredAuditRecorder = Object.freeze({
-  async record() {
-    // Day 3 integration point only. Persistent audit events are scheduled for Day 6.
+  async record(event) {
+    inMemoryLogs.push(Object.freeze({ ...event, recordedAt: new Date() }));
+  },
+
+  getLogs() {
+    return Object.freeze([...inMemoryLogs]);
+  },
+
+  clear() {
+    inMemoryLogs.length = 0;
   },
 });

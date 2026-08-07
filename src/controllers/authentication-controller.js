@@ -41,7 +41,7 @@ function renderLogin(response, {
 
 export function createAuthenticationController(
   userService,
-  { sessionCookie },
+  { sessionCookie, auditRecorder },
 ) {
   return Object.freeze({
     show(request, response) {
@@ -106,6 +106,18 @@ export function createAuthenticationController(
     },
 
     async destroy(request, response) {
+      const actorUserId = request.authenticatedUser?.id ?? null;
+
+      if (auditRecorder && typeof auditRecorder.record === "function") {
+        await auditRecorder.record({
+          action: "authentication.logout",
+          actorUserId,
+          entityType: "user",
+          entityId: actorUserId,
+          result: "success",
+        });
+      }
+
       if (request.session) {
         await destroySession(request);
       }

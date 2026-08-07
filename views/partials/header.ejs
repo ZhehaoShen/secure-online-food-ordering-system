@@ -58,6 +58,12 @@
                   : 'nav-link' %>"
                 href="/admin/orders"
               >Manage orders</a>
+              <a
+                class="<%= activePath === '/admin/audit-logs'
+                  ? 'nav-link is-active'
+                  : 'nav-link' %>"
+                href="/admin/audit-logs"
+              >Audit logs</a>
             <% } %>
             <span class="nav-identity">
               Signed in as <strong><%= currentUser.name %></strong>

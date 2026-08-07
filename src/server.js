@@ -8,9 +8,11 @@ import {
   createDatabasePool,
 } from "./db/pool.js";
 import { logEvent } from "./logger.js";
+import { createAuditRepository } from "./repositories/audit-repository.js";
 import { createFoodItemRepository } from "./repositories/food-item-repository.js";
 import { createOrderRepository } from "./repositories/order-repository.js";
 import { createUserRepository } from "./repositories/user-repository.js";
+import { createPersistentAuditRecorder } from "./audit/persistent-audit-recorder.js";
 import { removeServerPid, writeServerPid } from "./runtime-state.js";
 import { createAdminOrderService } from "./services/admin-order-service.js";
 import { createCartService } from "./services/cart-service.js";
@@ -70,17 +72,20 @@ export function startServer({
 function createRuntimeApplication(environment = process.env) {
   const sessionConfig = readSessionConfig(environment);
   const pool = createDatabasePool({ environment });
+  const auditRepository = createAuditRepository(pool);
+  const auditRecorder = createPersistentAuditRecorder(auditRepository);
   const foodItemRepository = createFoodItemRepository(pool);
   const orderRepository = createOrderRepository(pool);
   const userRepository = createUserRepository(pool);
   const cartService = createCartService(foodItemRepository);
-  const adminOrderService = createAdminOrderService(orderRepository);
+  const adminOrderService = createAdminOrderService(orderRepository, { auditRecorder });
   const foodManagementService = createFoodManagementService(
     foodItemRepository,
+    { auditRecorder },
   );
   const menuService = createMenuService(foodItemRepository);
-  const orderService = createOrderService(orderRepository);
-  const userService = createUserService(userRepository);
+  const orderService = createOrderService(orderRepository, { auditRecorder });
+  const userService = createUserService(userRepository, { auditRecorder });
   const sessionStore = createSessionStore({
     pool,
     idleTimeoutMilliseconds: sessionConfig.idleTimeoutMilliseconds,
@@ -93,6 +98,8 @@ function createRuntimeApplication(environment = process.env) {
   return Object.freeze({
     app: createApplication({
       adminOrderService,
+      auditRepository,
+      auditRecorder,
       cartService,
       foodManagementService,
       menuService,

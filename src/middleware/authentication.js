@@ -61,6 +61,21 @@ export function requireAdministrator(request, response, next) {
   }
 
   if (request.authenticatedUser.role !== "admin") {
+    const auditRecorder = request.app?.locals?.auditRecorder;
+    if (auditRecorder && typeof auditRecorder.record === "function") {
+      auditRecorder.record({
+        action: "security.access_denied",
+        actorUserId: request.authenticatedUser.id,
+        entityType: "request",
+        entityId: null,
+        result: "denied",
+        details: {
+          method: request.method,
+          path: request.path,
+          role: request.authenticatedUser.role,
+        },
+      }).catch(() => {});
+    }
     next(new AdministratorAccessError());
     return;
   }
