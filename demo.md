@@ -28,8 +28,32 @@
 ```powershell
 cd secure-online-food-ordering-system
 
-# 1. 复制环境变量文件 (已填入匹配 pgAdmin4 设置的密码)
-Copy-Item .env.example .env
+# 1. 生成可直接运行的环境配置文件 .env (避免 replace_with_* 占位符报错)
+Set-Content .env @"
+NODE_ENV=development
+HOST=127.0.0.1
+PORT=3000
+APP_BASE_URL=http://127.0.0.1:3000
+TRUST_PROXY=false
+
+DATABASE_HOST=127.0.0.1
+DATABASE_PORT=5432
+DATABASE_NAME=food_ordering_dev
+DATABASE_USER=food_ordering_app
+DATABASE_PASSWORD=AppPassword123!
+DATABASE_SSL=false
+
+MIGRATION_DATABASE_USER=food_ordering_migrator
+MIGRATION_DATABASE_PASSWORD=MigrationPassword123!
+
+SESSION_SECRET=a_secure_random_session_secret_value_32_bytes_long!
+SESSION_COOKIE_NAME=food_ordering_sid
+SESSION_IDLE_TIMEOUT_MINUTES=30
+SESSION_SECURE_COOKIE=false
+
+LOG_LEVEL=info
+BACKUP_DIRECTORY=backups
+"@
 
 # 2. 安装项目依赖
 npm ci --ignore-scripts
