@@ -104,3 +104,15 @@ fictional project data.
 - **Environment:** Local Mac development environment using isolated loopback services and fictional demo data only.
 - **Evidence review:** All screenshots contain fictional data only; no credentials, raw password hashes, real personal data, tokens, or live connection secrets are exposed.
 
+## Day 6 — August 8, 2026
+
+- **Screenshots:**
+  - [`day-06/2026-08-08-audit-backup-restore.png`](day-06/2026-08-08-audit-backup-restore.png) — Sanitized audit log record in administrator view plus successful cross-platform `npm run db:backup` and `npm run db:restore` command output without secrets.
+  - [`day-06/2026-08-08-security-demo-overview.png`](day-06/2026-08-08-security-demo-overview.png) — Final running secure application dashboard showing major security demo controls available for the August 10 presentation.
+  - [`day-06/2026-08-08-macos-final-run.png`](day-06/2026-08-08-macos-final-run.png) — Final project running locally on the primary macOS development and demonstration environment.
+  - [`day-06/2026-08-08-windows-clone-run.png`](day-06/2026-08-08-windows-clone-run.png) — Final secure project running after a fresh GitHub clone in native Windows PowerShell without WSL or Unix dependencies.
+- **Related requirement or security control:** Day 6 database security controls; least-privilege PostgreSQL roles; persistent sanitized audit logging; cross-platform backup and restore commands; macOS and Windows PowerShell run verification.
+- **Environment:** Primary macOS development environment and native Windows PowerShell environment using fictional project data only.
+- **Evidence review:** Confirmed all four Day 6 PNG files are valid and readable (`1265 × 1149`). They contain only fictional project data, system paths, and safety text. No real credentials, raw password hashes, tokens, session cookies, or live secrets are exposed.
+
+
