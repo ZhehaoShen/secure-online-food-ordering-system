@@ -163,10 +163,9 @@ npm run demo:vulnerable:start
 ### 步骤 4：脆弱 XSS 脚本执行演示 (Insecure XSS Attack)
 
 - **演示动作**：
-  1. 访问 `http://127.0.0.1:3001/search?q=<script>alert('XSS-Demo')</script>`
-     或在输入框提交：`<svg onload=alert(1)>`
-- **预期现象**：浏览器立即弹窗执行注入的 JavaScript 代码。
-- **源码对应**：`demo/vulnerable/views/search.ejs` (展示非安全的未转义渲染 `<%- %>`)
+  1. 访问 `http://127.0.0.1:3100/scenarios/xss` 并点击 "Run approved XSS marker"。
+- **预期现象**：页面成功触发并插入包含 `xssDemo` 标志的向量元素。
+- **源码对应**：`demo/vulnerable/views/baseline-scenario.ejs` (展示非安全的未转义渲染 `<%- %>`)
 - **截图参考**：`evidence/day-05/2026-08-07-xss-insecure.png`
 - **讲解台词**：“脆弱版本使用了未转义的 EJS 插值 `<%- %>`，导致攻击者嵌入的脚本在其他用户浏览器中被非法执行。”
 
@@ -193,7 +192,7 @@ npm run demo:vulnerable:start
   4. **Information Disclosure (信息泄露)**：通过通用错误提示及 `HttpOnly` / `SameSite` Secure Cookie 防范。
   5. **Denial of Service (拒绝服务)**：通过请求体限额与登录失败延迟防护。
   6. **Elevation of Privilege (特权提升)**：通过服务器端 `requireAdmin` 中间件与订单权属校验（`user_id` + `order_id`）防范。
-- **讲解台词**：“我们的 STRIDE  threat model 覆盖了登录与身份验证全流程，每一项威胁都精确映射到了源码中的防护中间件。”
+- **讲解台词**：“我们的 STRIDE threat model 覆盖了登录与身份验证全流程，每一项威胁都精确映射到了源码中的防护中间件。”
 
 ---
 
@@ -243,7 +242,7 @@ npm run demo:vulnerable:start
   ```powershell
   npm run shutdown
   ```
-- **预期现象**：系统控制台输出优雅关闭日志，端口 3000 与 3001 进程安全释放。
+- **预期现象**：系统控制台输出优雅关闭日志，端口 3000 与 3100 进程安全释放。
 - **讲解台词**：“以上是 Secure Online Food Ordering System 的完整功能与安全展示，感谢各位评委，系统已优雅关闭。”
 
 ---
@@ -254,6 +253,6 @@ npm run demo:vulnerable:start
 | --- | --- |
 | **PostgreSQL 服务未启动** | 在管理员 PowerShell 中运行：`Start-Service -Name "postgresql-x64-16"` |
 | **`psql` / `createdb` 报错未找到** | 手动指定环境变量：`$env:POSTGRES_BIN="C:\Program Files\PostgreSQL\16\bin"` |
-| **端口 3000 或 3001 被占用** | 运行关闭脚本：`npm run shutdown` 或手动结束 Node 进程：`Stop-Process -Name node -Force` |
+| **端口 3000 或 3100 被占用** | 运行关闭脚本：`npm run shutdown` 或手动结束 Node 进程：`Stop-Process -Name node -Force` |
 | **脆弱演示库数据混乱** | 在窗口 2 运行重置脚本：`npm run demo:vulnerable:reset` |
 | **主安全库需要重置恢复** | 运行初始化命令：`npm run db:migrate` 与 `npm run db:seed` |
