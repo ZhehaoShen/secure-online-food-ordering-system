@@ -47,6 +47,7 @@
               ? '/admin/food-items'
               : `/admin/food-items/${foodItemId}` %>"
           >
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="form-field">
               <label for="food-name">Name</label>
               <input

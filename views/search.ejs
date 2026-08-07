@@ -99,6 +99,7 @@
                 </div>
                 <% if (currentUser) { %>
                   <form class="card-order-form" method="post" action="/cart/items">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <input type="hidden" name="foodItemId" value="<%= food.id %>">
                     <label>
                       <span>Quantity</span>

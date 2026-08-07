@@ -39,6 +39,7 @@
                     method="post"
                     action="/cart/items/<%= item.id %>/update"
                   >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <label>
                       Quantity
                       <input
@@ -56,6 +57,7 @@
                     method="post"
                     action="/cart/items/<%= item.id %>/remove"
                   >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button class="remove-button" type="submit">Remove</button>
                   </form>
                 </div>
@@ -79,6 +81,7 @@
             <strong><%= cart.total %></strong>
           </div>
           <form class="checkout-form" method="post" action="/orders">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="checkout-button" type="submit">Place order</button>
           </form>
           <p class="cart-summary-note">

@@ -62,18 +62,42 @@ function cookiePair(response) {
   return setCookie?.split(";", 1)[0] ?? null;
 }
 
-function loginBody(email, password) {
-  return new URLSearchParams({ email, password });
+async function getLoginCsrfSession(baseUrl) {
+  const response = await fetch(`${baseUrl}/login`, {
+    headers: { accept: "text/html" },
+  });
+  const html = await response.text();
+  const setCookie = response.headers.get("set-cookie");
+  const cookie = setCookie ? setCookie.split(";")[0] : null;
+  const match = html.match(/name="_csrf"\s+value="([a-f0-9]{64})"/);
+  const csrfToken = match ? match[1] : "";
+  return { cookie, csrfToken };
 }
 
-async function submitLogin(baseUrl, email, password) {
+async function submitLogin(baseUrl, email, password, existingCookie = null, existingCsrfToken = null) {
+  let cookie = existingCookie;
+  let csrfToken = existingCsrfToken;
+
+  if (!cookie || !csrfToken) {
+    const session = await getLoginCsrfSession(baseUrl);
+    cookie = cookie || session.cookie;
+    csrfToken = csrfToken || session.csrfToken;
+  }
+
+  const body = new URLSearchParams({ email, password, _csrf: csrfToken });
+  const headers = {
+    accept: "text/html",
+    "content-type": "application/x-www-form-urlencoded",
+  };
+
+  if (cookie) {
+    headers.cookie = cookie;
+  }
+
   return fetch(`${baseUrl}/login`, {
     method: "POST",
-    headers: {
-      accept: "text/html",
-      "content-type": "application/x-www-form-urlencoded",
-    },
-    body: loginBody(email, password),
+    headers,
+    body,
     redirect: "manual",
   });
 }
@@ -374,12 +398,21 @@ describe.sequential("authentication workflow", () => {
   });
 
   test("destroys the PostgreSQL session and clears authenticated navigation", async () => {
+    const menuPage = await fetch(`${baseUrl}/`, {
+      headers: { accept: "text/html", cookie: sessionCookie },
+    });
+    const menuHtml = await menuPage.text();
+    const match = menuHtml.match(/name="_csrf"\s+value="([a-f0-9]{64})"/);
+    const csrfToken = match ? match[1] : "";
+
     const response = await fetch(`${baseUrl}/logout`, {
       method: "POST",
       headers: {
         accept: "text/html",
+        "content-type": "application/x-www-form-urlencoded",
         cookie: sessionCookie,
       },
+      body: new URLSearchParams({ _csrf: csrfToken }),
       redirect: "manual",
     });
 
@@ -398,10 +431,10 @@ describe.sequential("authentication workflow", () => {
         cookie: sessionCookie,
       },
     });
-    const menuHtml = await menuResponse.text();
+    const loggedOutMenuHtml = await menuResponse.text();
 
-    expect(menuHtml).toContain('href="/register"');
-    expect(menuHtml).toContain('href="/login"');
-    expect(menuHtml).not.toContain("Signed in as");
+    expect(loggedOutMenuHtml).toContain('href="/register"');
+    expect(loggedOutMenuHtml).toContain('href="/login"');
+    expect(loggedOutMenuHtml).not.toContain("Signed in as");
   });
 });

@@ -90,3 +90,17 @@ fictional project data.
   safety text where applicable. No credentials, passwords, tokens, cookies,
   session identifiers, real personal data, database connection details, stack
   traces, terminal/debug output, or unrelated desktop content are visible.
+
+## Day 5 — August 7, 2026
+
+- **Screenshots:**
+  - [`day-05/2026-08-07-login-sqli-insecure.png`](day-05/2026-08-07-login-sqli-insecure.png) — Insecure login changes behavior after the harmless SQL-injection input; the local-only warning banner remains visible.
+  - [`day-05/2026-08-07-login-sqli-secure.png`](day-05/2026-08-07-login-sqli-secure.png) — Secure login treats the same input as literal data and returns a controlled generic failure (`Email or password is incorrect.`).
+  - [`day-05/2026-08-07-xss-insecure.png`](day-05/2026-08-07-xss-insecure.png) — Harmless XSS SVG payload visibly executes only in the isolated local vulnerable demo.
+  - [`day-05/2026-08-07-xss-secure.png`](day-05/2026-08-07-xss-secure.png) — The same payload is displayed as harmless escaped text in the secure application with CSP headers active.
+  - [`day-05/2026-08-07-csrf-blocked.png`](day-05/2026-08-07-csrf-blocked.png) — A state-changing request without the required CSRF token receives controlled HTTP 403 CSRF rejection (`CSRF_TOKEN_INVALID`).
+  - [`day-05/2026-08-07-xss-session-rbac.png`](day-05/2026-08-07-xss-session-rbac.png) — Secure XSS handling plus a visible session or administrator-access protection result.
+- **Related requirement or security control:** Day 5 web security controls; login SQL-injection comparison; XSS output encoding and CSP headers; cryptographically secure session-bound CSRF token generation and middleware rejection; session regeneration on login; server-side RBAC and ownership scoping (`order_id` + `user_id`).
+- **Environment:** Local Mac development environment using isolated loopback services and fictional demo data only.
+- **Evidence review:** All screenshots contain fictional data only; no credentials, raw password hashes, real personal data, tokens, or live connection secrets are exposed.
+

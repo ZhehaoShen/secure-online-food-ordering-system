@@ -45,6 +45,7 @@
                   method="post"
                   action="/admin/food-items/<%= food.id %>/disable"
                 >
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button class="danger-button" type="submit">Disable</button>
                 </form>
               <% } else { %>

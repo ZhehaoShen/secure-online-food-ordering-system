@@ -7,6 +7,7 @@ import express from "express";
 import { publicErrorDetails } from "./errors.js";
 import { logEvent } from "./logger.js";
 import { exposeAuthenticatedUser } from "./middleware/authentication.js";
+import { csrfProtectionMiddleware } from "./middleware/csrf.js";
 import { registerAdminFoodRoutes } from "./routes/admin-food-routes.js";
 import { registerAdminOrderRoutes } from "./routes/admin-order-routes.js";
 import { registerAuthenticationRoutes } from "./routes/authentication-routes.js";
@@ -75,6 +76,7 @@ export function createApplication({
   app.set("views", VIEW_DIRECTORY);
   app.locals.currentYear = new Date().getUTCFullYear();
   app.locals.currentUser = null;
+  app.locals.csrfToken = "";
 
   app.use((request, response, next) => {
     const requestId = randomUUID();
@@ -124,6 +126,7 @@ export function createApplication({
   if (sessionMiddleware) {
     app.use(sessionMiddleware);
     app.use(exposeAuthenticatedUser);
+    app.use(csrfProtectionMiddleware);
   }
 
   app.get("/health", (_request, response) => {

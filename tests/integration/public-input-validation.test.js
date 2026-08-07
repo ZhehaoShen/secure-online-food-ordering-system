@@ -48,13 +48,17 @@ async function get(baseUrl, path) {
 }
 
 async function post(baseUrl, path, body) {
+  const params = new URLSearchParams(typeof body === "string" ? body : "");
+  if (!params.has("_csrf")) {
+    params.set("_csrf", "00".repeat(32));
+  }
   const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: {
       accept: "text/html",
       "content-type": "application/x-www-form-urlencoded",
     },
-    body,
+    body: params.toString(),
     redirect: "manual",
   });
 
@@ -91,7 +95,7 @@ describe.sequential("public registration, login, menu, and search validation", (
       menuService: { getMenu, getSearchResults },
       sessionCookie: { name: "fictional_sid", secure: false },
       sessionMiddleware(request, _response, next) {
-        request.session = {};
+        request.session = { csrfToken: "00".repeat(32) };
         next();
       },
       userService: { authenticate, createCustomer },

@@ -63,6 +63,7 @@
               Signed in as <strong><%= currentUser.name %></strong>
             </span>
             <form class="nav-logout" method="post" action="/logout">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit">Sign out</button>
             </form>
           <% } else { %>

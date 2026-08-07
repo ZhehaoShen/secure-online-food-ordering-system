@@ -1,7 +1,9 @@
 import {
   destroySession,
+  regenerateSession,
   saveSession,
 } from "../session/persistence.js";
+import { rotateCsrfToken } from "../security/csrf.js";
 import { RequestValidationError } from "../validation/request.js";
 
 const INVALID_LOGIN_MESSAGE = "Email or password is incorrect.";
@@ -79,11 +81,13 @@ export function createAuthenticationController(
         throw new TypeError("Session middleware is required for sign-in.");
       }
 
+      await regenerateSession(request);
       request.session.user = Object.freeze({
         id: user.id,
         name: user.name,
         role: user.role,
       });
+      rotateCsrfToken(request.session);
       await saveSession(request);
       response.redirect(303, "/");
     },

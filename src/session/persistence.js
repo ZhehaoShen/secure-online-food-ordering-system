@@ -37,3 +37,21 @@ export function destroySession(request) {
     });
   });
 }
+
+export function regenerateSession(request) {
+  return new Promise((resolveRegenerate, rejectRegenerate) => {
+    if (!request.session || typeof request.session.regenerate !== "function") {
+      resolveRegenerate();
+      return;
+    }
+
+    request.session.regenerate((error) => {
+      if (error) {
+        rejectRegenerate(new SessionPersistenceError(error));
+        return;
+      }
+
+      resolveRegenerate();
+    });
+  });
+}

@@ -31,6 +31,7 @@
       <% } %>
 
       <form method="post" action="/login" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-field">
           <label for="email">Email address</label>
           <input

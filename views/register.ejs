@@ -27,6 +27,7 @@
       <% } %>
 
       <form method="post" action="/register" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-field">
           <label for="name">Name</label>
           <input
