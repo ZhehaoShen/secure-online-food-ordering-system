@@ -111,7 +111,7 @@ npm run demo:vulnerable:setup
 # 4. 启动隔离脆弱演示环境
 npm run demo:vulnerable:start
 ```
-- **脆弱演示环境访问地址**：[http://127.0.0.1:3001](http://127.0.0.1:3001)
+- **脆弱演示环境访问地址**：[http://127.0.0.1:3100](http://127.0.0.1:3100)
 
 ### 1.5 演示预设测试账号
 
@@ -125,34 +125,32 @@ npm run demo:vulnerable:start
 ### 步骤 1：演示双环境架构与隔离安全互锁展示
 
 - **演示动作**：
-  1. 在 Chrome/Edge 浏览器中并排打开 `http://127.0.0.1:3000` (安全版) 与 `http://127.0.0.1:3001` (脆弱版)。
-  2. 指向 3001 端口顶部的醒目红色警告 Banner：`"EDUCATIONAL VULNERABLE DEMO — LOCAL LOOPBACK ONLY"`。
+  1. 在 Chrome/Edge 浏览器中并排打开 `http://127.0.0.1:3000` (安全版) 与 `http://127.0.0.1:3100` (脆弱版)。
+  2. 指向 3100 端口顶部的醒目红色警告 Banner：`"EDUCATIONAL VULNERABLE DEMO — LOCAL LOOPBACK ONLY"`。
 - **源码对应**：`demo/vulnerable/server.js`，`demo/vulnerable/config.js`
 - **截图参考**：`evidence/day-06/2026-08-08-windows-clone-run.png`
 - **讲解台词**：“我们采用了严格的隔离互锁机制：脆弱演示版本仅允许在本地 loopback 运行，必须带有 DEMO 标志并连接独立的只读假数据库，绝不会在生产环境开启。”
 
 ---
 
-### 步骤 2：脆弱登录 SQL 注入绕过演示 (Insecure Login SQL Injection)
+### 步骤 2：脆弱环境 SQL 注入演示 (Insecure SQL Injection)
 
 - **演示动作**：
-  1. 访问 `http://127.0.0.1:3001/login`。
-  2. 在 Email 框输入：`' OR '1'='1`
-  3. Password 框随意输入：`anything`
-  4. 点击登录。
-- **预期现象**：不需要知道任何真实密码，直接绕过身份验证并成功登录为数据库中的第一个用户！
-- **源码对应**：`demo/vulnerable/app.js` (展示字符串直接拼接的 Raw SQL 语句)
+  1. 访问 `http://127.0.0.1:3100/scenarios/sql-injection`。
+  2. 点击页面上的按钮：运行被允许的只读 Payload `does-not-match%' OR '1'='1' -- `。
+- **预期现象**：不需要匹配搜索关键词，未过滤的注入 Payload 直接拼接进入 SQL，查询并输出了数据库中所有的菜品列表数据！
+- **源码对应**：`demo/vulnerable/app.js` (展示字符串直接拼接的 Raw SQL 语句 `WHERE name ILIKE '%${query}%'`)
 - **截图参考**：`evidence/day-05/2026-08-07-login-sqli-insecure.png`
-- **讲解台词**：“在脆弱版本中，未经过滤的输入 `' OR '1'='1` 直接拼接进 SQL 语句，改变了 WHERE 条件的逻辑结构，导致无需密码即可成功绕过身份验证。”
+- **讲解台词**：“在脆弱版本中，未经过滤的输入直接拼接进 SQL 语句，改变了 WHERE 条件的逻辑结构，导致输出了整张表的数据。”
 - **故障恢复**：若需重置演示库，在 PowerShell 窗口 2 运行 `npm run demo:vulnerable:reset`。
 
 ---
 
-### 步骤 3：安全登录 SQL 注入防御对比 (Secure Login SQL Injection)
+### 步骤 3：安全登录与 SQL 注入防御对比 (Secure SQL Injection Defense)
 
 - **演示动作**：
   1. 访问 `http://127.0.0.1:3000/login`。
-  2. 在 Email 框输入相同的 Payload：`' OR '1'='1`
+  2. 在 Email 框输入 Payload：`' OR '1'='1`
   3. Password 框输入：`anything`
   4. 点击登录。
 - **预期现象**：登录失败，系统呈现受控的通用安全提示：`"Email or password is incorrect."`，无任何数据库错误信息泄露。
