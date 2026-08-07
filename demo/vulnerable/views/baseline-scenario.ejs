@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/assets/demo.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <%- include("partials/local-only-warning") %>
+
+      <section class="panel scenario-heading">
+        <p class="section-label"><%= scenario.label %></p>
+        <h2><%= scenario.heading %></h2>
+        <p><%= scenario.description %></p>
+        <p><strong>Expected vulnerable result:</strong> <%= scenario.expected %></p>
+        <p><a href="/">Return to fixture preview</a></p>
+      </section>
+
+      <section class="panel scenario-heading">
+        <h2>Run this isolated scenario</h2>
+        <form method="<%= scenario.form.method %>" action="<%= scenario.form.action %>">
+          <div class="scenario-actions">
+            <% for (const button of scenario.form.buttons) { %>
+              <button
+                class="<%= button.danger ? "danger-button" : "" %>"
+                type="submit"
+                name="<%= button.name %>"
+                value="<%= button.value %>"
+              ><%= button.label %></button>
+            <% } %>
+          </div>
+        </form>
+      </section>
+
+      <% if (error) { %>
+        <section class="panel result-panel result-panel--error" role="status">
+          <h2>Scenario blocked</h2>
+          <p><%= error %></p>
+        </section>
+      <% } else if (result) { %>
+        <section class="panel result-panel" role="status">
+          <p class="section-label">Observed vulnerable result</p>
+          <h2><%= result.heading %></h2>
+          <p><%= result.message %></p>
+          <% if (result.rawHtml) { %>
+            <div class="injected-output" aria-label="Intentionally unescaped fictional XSS output">
+              <%# Intentionally vulnerable raw sink for the one fixed local classroom payload. %>
+              <%- result.rawHtml %>
+            </div>
+          <% } %>
+          <% if (result.details?.length) { %>
+            <dl class="payload-list">
+              <% for (const detail of result.details) { %>
+                <div>
+                  <dt><%= detail.label %></dt>
+                  <dd><%= detail.value %></dd>
+                </div>
+              <% } %>
+            </dl>
+          <% } %>
+        </section>
+      <% } %>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/assets/demo.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <%- include("partials/local-only-warning") %>
+      <section class="panel">
+        <h2><%= pageTitle %></h2>
+        <p><%= message %></p>
+        <p><a href="/">Return to the isolated demo home page</a></p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/assets/demo.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <%- include("partials/local-only-warning") %>
+
+      <section class="panel scenario-heading">
+        <p class="section-label">Approved read-only scenario</p>
+        <h2>SQL injection changes a fictional search result</h2>
+        <p>This page intentionally builds one SQL statement dynamically. It accepts only the control term and one approved non-destructive payload, and runs only after the dedicated demo database target is verified.</p>
+        <p><a href="/">Return to fixture preview</a></p>
+      </section>
+
+      <section class="panel">
+        <h2>Run the controlled comparison</h2>
+        <form method="get" action="/scenarios/sql-injection">
+          <label for="q">Exact approved input</label>
+          <input id="q" value="<%= query %>" autocomplete="off" readonly>
+          <div class="scenario-actions">
+            <button type="submit" name="q" value="<%= controlTerm %>">Run control: one result</button>
+            <button class="danger-button" type="submit" name="q" value="<%= approvedPayload %>">Run approved injection: all fictional results</button>
+          </div>
+        </form>
+        <dl class="payload-list">
+          <div>
+            <dt>Control term</dt>
+            <dd><code><%= controlTerm %></code></dd>
+          </div>
+          <div>
+            <dt>Approved payload</dt>
+            <dd><code><%= approvedPayload %></code></dd>
+          </div>
+        </dl>
+      </section>
+
+      <% if (error) { %>
+        <section class="panel result-panel result-panel--error" role="status">
+          <h2>Scenario blocked</h2>
+          <p><%= error %></p>
+        </section>
+      <% } else if (query) { %>
+        <section class="panel result-panel" role="status">
+          <p class="section-label">Observed vulnerable result</p>
+          <h2><%= foods.length %> fictional item<%= foods.length === 1 ? "" : "s" %> returned</h2>
+          <p>The control term should return one record. The approved injected condition returns every seeded fictional food, demonstrating the query-structure change without writing data.</p>
+          <ul>
+            <% for (const food of foods) { %>
+              <li>
+                <strong><%= food.name %></strong>
+                <span><%= food.category %> · <%= food.price %></span>
+              </li>
+            <% } %>
+          </ul>
+        </section>
+      <% } %>
+    </main>
+  </body>
+</html>

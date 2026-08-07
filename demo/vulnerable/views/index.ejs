@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/assets/demo.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <%- include("partials/local-only-warning") %>
+
+      <section class="panel" aria-labelledby="fixture-heading">
+        <p class="section-label">Fictional fixture preview</p>
+        <h2 id="fixture-heading">Isolated classroom data</h2>
+        <p>No password, session identifier, database credential, or connection string is displayed.</p>
+        <nav class="scenario-links" aria-label="Prepared vulnerable baseline scenarios">
+          <a class="button-link" href="/scenarios/sql-injection">SQL injection</a>
+          <a class="button-link" href="/scenarios/xss">Reflected XSS</a>
+          <a class="button-link" href="/scenarios/weak-password">Weak password</a>
+          <a class="button-link" href="/scenarios/unsafe-session">Unsafe session</a>
+          <a class="button-link" href="/scenarios/missing-admin-authorization">Missing admin authorization</a>
+          <a class="button-link" href="/scenarios/excessive-database-privileges">Excessive database privileges</a>
+        </nav>
+      </section>
+
+      <section class="grid" aria-label="Fictional demonstration records">
+        <article class="panel">
+          <h2>Fictional accounts</h2>
+          <ul>
+            <% for (const user of data.users) { %>
+              <li>
+                <strong><%= user.name %></strong>
+                <span><%= user.email %> · <%= user.role %></span>
+              </li>
+            <% } %>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>Fictional menu</h2>
+          <ul>
+            <% for (const food of data.foods) { %>
+              <li>
+                <strong><%= food.name %></strong>
+                <span><%= food.category %> · <%= food.price %></span>
+                <small><%= food.description %></small>
+              </li>
+            <% } %>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>Fictional orders</h2>
+          <ul>
+            <% for (const order of data.orders) { %>
+              <li>
+                <strong>Order #<%= order.id %> · <%= order.status %></strong>
+                <span><%= order.customer_name %> · <%= order.total %> · <%= order.line_count %> line</span>
+              </li>
+            <% } %>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
