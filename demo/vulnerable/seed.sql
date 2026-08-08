@@ -27,14 +27,14 @@ VALUES
         1,
         'Fictional Demo Customer',
         'customer@vulnerable-demo.test',
-        'scrypt$v1$N=16384,r=8,p=1$rmhPQeXwuZz8G4r5iSpr2g$jvtTYMl6Z_IefJ6rf01ICOyWe7-a-tWQbnNFrNckA6R4gldPG-yR1nn1nVoXmbjHLzliG2z__xVpfRKJZ6AYgQ',
+        'scrypt$v1$N=16384,r=8,p=1$JPvK5-AH7N2bP_Cn2OCAZw$1SMEMT-pKG35i6xKtIWfPHQIozpqDJGJGz4sti4u4nE3d-5jrO3zqsoepoNTNyprpBgB6THPMAID_nUwhoAxoQ',
         'customer'
     ),
     (
         2,
         'Fictional Demo Administrator',
         'admin@vulnerable-demo.test',
-        'scrypt$v1$N=16384,r=8,p=1$vAjk9eevcQH_aLeMCA6ELQ$-PS7TzybQBrBfbfjJM_MERP7pk2L4phRGtgjBEFyUPbWQS8LUwgZJigwHr50Jn0ivQu1AfnJTBrOFOKAIVWXjw',
+        'scrypt$v1$N=16384,r=8,p=1$HihN1jt0iLhkN9tdvbju5g$J9GZLeQPAF6HPSPNFBXZACN9vozXqvl5wwY6fHJD_D0RvYtw7rbwZSWrhKpW5Me831vcv1CWbk-HOVDi8EO1Mg',
         'admin'
     )
 ON CONFLICT (id) DO UPDATE

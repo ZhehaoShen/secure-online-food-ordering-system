@@ -12,7 +12,7 @@ VALUES
     (
         'Avery Sample',
         'avery.customer@example.test',
-        'scrypt$v1$N=16384,r=8,p=1$d4Jpp3loApQAVVlwYFqHCQ$-SjiSUOeYYW-7fNEMJCzdL-7ZSwycl70PhHA_BdMIBlei0y02sL5XPVwcrxt9xyJgJmEnjuhnKCrThjI0Ct6iw',
+        'scrypt$v1$N=16384,r=8,p=1$JPvK5-AH7N2bP_Cn2OCAZw$1SMEMT-pKG35i6xKtIWfPHQIozpqDJGJGz4sti4u4nE3d-5jrO3zqsoepoNTNyprpBgB6THPMAID_nUwhoAxoQ',
         'customer',
         '2026-07-28 14:00:00+00',
         '2026-07-28 14:00:00+00'
@@ -20,7 +20,7 @@ VALUES
     (
         'Morgan Example',
         'morgan.customer@example.test',
-        'scrypt$v1$N=16384,r=8,p=1$fntmQWzroo5DMuJ8FZDlbQ$KSBpSqbwGO3-SXkrmLCW2FO5KF9-7Jw9Di39Ub99Tcx_07J2eFlHUtFKrRH4V9SVsPrUg4lQmjrhLBHEfXG-Lw',
+        'scrypt$v1$N=16384,r=8,p=1$JPvK5-AH7N2bP_Cn2OCAZw$1SMEMT-pKG35i6xKtIWfPHQIozpqDJGJGz4sti4u4nE3d-5jrO3zqsoepoNTNyprpBgB6THPMAID_nUwhoAxoQ',
         'customer',
         '2026-07-28 14:05:00+00',
         '2026-07-28 14:05:00+00'
@@ -28,7 +28,7 @@ VALUES
     (
         'Casey Demo Admin',
         'casey.admin@example.test',
-        'scrypt$v1$N=16384,r=8,p=1$Tc-1Re8rekn5o53uV9hQ3Q$xZDyjObu7WF5_dZLEQMj7kN_A7F58jkaz21w9SC56kKdeqhFRugMriZ86Mj9BLwFCNQXFHUXuaCCrsuaekovJQ',
+        'scrypt$v1$N=16384,r=8,p=1$HihN1jt0iLhkN9tdvbju5g$J9GZLeQPAF6HPSPNFBXZACN9vozXqvl5wwY6fHJD_D0RvYtw7rbwZSWrhKpW5Me831vcv1CWbk-HOVDi8EO1Mg',
         'admin',
         '2026-07-28 14:10:00+00',
         '2026-07-28 14:10:00+00'
