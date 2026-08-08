@@ -20,6 +20,7 @@
     "db:roles": "node --env-file-if-exists=.env scripts/database-task.js roles",
     "db:migrate": "node --env-file-if-exists=.env scripts/database-task.js migrate",
     "db:seed": "node --env-file-if-exists=.env scripts/database-task.js seed",
+    "db:setup": "node --env-file-if-exists=.env scripts/database-task.js migrate && node --env-file-if-exists=.env scripts/database-task.js seed",
     "db:backup": "node --env-file-if-exists=.env scripts/database-task.js backup",
     "db:restore": "node --env-file-if-exists=.env scripts/database-task.js restore",
     "shutdown": "node scripts/shutdown.js"
