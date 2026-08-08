@@ -208,16 +208,16 @@ npm run demo:vulnerable:start
 ### 演示 3：STRIDE 威胁模型与 Session/CSRF 安全解析
 
 - **操作步骤**：
-  1. 打开 Windows Firefox 开发者工具 (F12 或 Ctrl+Shift+I) -> 「存储 (Storage)」 -> 「Cookie」，对比两端 Session Cookie 配置：
-     - **Vulnerable 端 (`:3100`)**：Cookie 缺失 `HttpOnly` / `SameSite` 属性，容易被 JavaScript 脚本读取或遭受 CSRF 攻击。
-     - **Secure 端 (`:3000`)**：Cookie 强制设置 `HttpOnly` (防止 XSS 窃取)、`SameSite=Lax`，表单包含 `_csrf` 随机 Token 校验。
-  2. 打开文档 [docs/login-stride-threat-model.md](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/docs/login-stride-threat-model.md)，讲解 STRIDE 6 大维度应对措施：
-     - **Spoofing (仿冒)**：`scrypt` / `Argon2id` 慢哈希 + Session 防范。
-     - **Tampering (篡改)**：参数化 SQL + CSRF Token。
-     - **Repudiation (抵赖)**：脱敏审计日志持久化。
-     - **Information Disclosure (信息泄露)**：通用错误提示 + `HttpOnly` Cookie。
-     - **Denial of Service (拒绝服务)**：请求体限额 + 登录防爆破延迟。
-     - **Elevation of Privilege (特权提升)**：服务器端 `requireAdminRole` 中间件与订单 `user_id` 归属校验。
+  1. **Session Cookie 与控制台防窃取测试 (Console XSS Test)**：
+     - 打开两端浏览器 `F12` -> 进入 **控制台 (Console)** 标签页，输入 `document.cookie` 并回车：
+     - **Vulnerable 端 (`:3100`)**：控制台直接打出包含 `vulnerable_demo_sid` 的明文 Cookie，证明一旦存在 XSS，攻击者可直接用脚本窃取 Session。
+     - **Secure 端 (`:3000`)**：控制台返回空字符串 `""`，因为 Cookie 强制开启了 `HttpOnly` 标识，阻断 JavaScript 访问。
+  2. **Cookie 属性对比 (Storage)**：
+     - 在 Windows Firefox `F12` -> 进入 **「存储 (Storage)」 -> 「Cookie」** 选项卡查看：
+     - **Secure 端 (`:3000`)** 标有 `HttpOnly` (防窃取) 与 `SameSite=Lax` (防 CSRF 跨站伪造)。
+  3. **DOM 结构 CSRF 随机 Token 审查 (Form Protection)**：
+     - 在 Secure 端 `:3000/login` 页面按 `F12` -> 进入 **查看元素 (Inspector/Elements)**，展开 `<form>` 标签：
+     - 展示隐藏字段 `<input type="hidden" name="_csrf" value="...">`，讲解随机 Token 如何防止跨站请求伪造与重放攻击。
 
 ---
 
@@ -226,7 +226,7 @@ npm run demo:vulnerable:start
 - **操作步骤**：
   1. **访问控制与越权测试**：
      - **Vulnerable 端 (`:3100/admin/orders`)**：未登录的普通用户直接访问后台管理路径，系统直接输出所有客户订单及敏感审计日志。
-     - **Secure 端 (`:3000/admin/orders`)**：未授权访问直接被 `requireAdminRole` 中间件拦截并返回 `403 Forbidden`。
+     - **Secure 端 (`:3000/admin/orders`)**：未授权访问直接被 `requireAdminRole` 中间件拦截并重定向到 `/login`（若以普通顾客登录访问则直接返回 `403 Forbidden`）。
   2. **审计日志与脱敏**：
      - 在 Secure 端以管理员登录访问 `/admin/audit-logs`，展示所有登录与管理日志，敏感字段如密码、Session 均被掩码为 `[REDACTED]`。
   3. **Windows 数据库备份与恢复**：
@@ -238,14 +238,18 @@ npm run demo:vulnerable:start
 
 ---
 
-### 演示 5：密码学应用与常数时间比对 (Cryptography)
+### 演示 5：密码学应用、防爆破与时序保护 (Cryptography & Timing Security)
 
 - **操作步骤**：
-  1. 打开文档 [docs/cryptography.md](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/docs/cryptography.md)。
-  2. 展示 `src/security/passwords.js` 源码中的密码哈希与比对函数：
-     - 使用 `scrypt` / `Argon2id` 强哈希算法；
-     - 独立 16-byte 随机 Salt 盐值；
-     - 使用 `crypto.timingSafeEqual()` 进行常数时间比较，防止 Timing Attack（时序侧信道攻击）。
+  1. **慢哈希 (`scrypt`) 防爆破耗时实测 (Network Latency Observation)**：
+     - 打开两端浏览器 `F12` -> 进入 **网络 (Network)** 标签页。
+     - 在 Secure 端 `:3000/login` 输入错误密码提交登录，查看 `POST /login` 请求的响应耗时（**Duration** 保持在 `~200ms` 上下）。
+     - **现象解析**：这就是 Node.js `scrypt` 强哈希故意引入的 CPU 计算延迟，大幅降低攻击者进行高并发自动化字典爆破的速率。
+  2. **常数时间比对源码对照 (Timing Attack Defense)**：
+     - 展示 [src/security/passwords.js](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/src/security/passwords.js) 中的 `crypto.timingSafeEqual()` 函数。
+     - **现象解析**：即使密码匹配失败，比对时间也恒定一致，防范攻击者通过高精度微秒级响应时差推算密码的**时序侧信道攻击 (Timing Attack)**。
+  3. **数据库脱敏与强盐值哈希**：
+     - 登录后台访问 `:3000/admin/audit-logs`，展示系统存入的密码均为 `scrypt$v1$N=16384,r=8,p=1$...` 格式带 16-byte 随机盐值的密文，绝无明文泄露风险。
 
 ---
 
