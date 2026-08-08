@@ -121,9 +121,10 @@ npm run demo:vulnerable:start
 
 ---
 
-### 1.5 演示预设测试账号 (Fictional Demo Credentials)
+### 1.5 演示预设测试账号与新账号注册指南 (Credentials & Registration Guide)
 
-演示系统已在数据库初始化时预置了以下测试账号（密码均已通过 Node.js `scrypt` 强哈希加密存储）：
+#### 1. 预设开箱即用账号表
+系统在初始化 (`npm run db:setup`) 时已预置以下账号（密码经 Node.js `scrypt` 强哈希加密）：
 
 | 系统环境 | 角色 (Role) | 登录 Email | 登录密码 | 权限与用途描述 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -132,7 +133,31 @@ npm run demo:vulnerable:start
 | **Vulnerable 端 (`:3100`)** | **顾客** (Customer) | `customer@vulnerable-demo.test` | `CustomerPass123!` | 脆弱演示端顾客账号 |
 | **Vulnerable 端 (`:3100`)** | **管理员** (Admin) | `admin@vulnerable-demo.test` | `AdminPass123!` | 脆弱演示端管理员账号（亦可通过 SQL 注入 Payload 直接绕过） |
 
-> **提示**：在 Secure 端 (`:3000`)，您也可以直接在浏览器访问 [http://127.0.0.1:3000/register](http://127.0.0.1:3000/register) 自主注册任意新顾客账号进行测试。
+#### 2. 在 Secure 端 (`:3000`) 注册/创建新账号的方法
+
+* **注册普通顾客账号 (Customer)**：
+  1. 在浏览器访问 `http://127.0.0.1:3000/register`（或点击右上角 **Register** 按钮）。
+  2. 依次填入 **Name**（如 `New Customer`）、**Email**（如 `newcustomer@example.com`）、**Password**（如 `CustomerPass123!`）及密码确认。
+  3. 点击 **Register** 提交，系统验证通过后将跳转至登录页，即可使用新账号登录。
+
+* **创建管理员账号 (Admin)**：
+  > **安全机制说明**：为遵循最小权限与防范特权提升 (Elevation of Privilege) 原则，前端注册页面 `/register` 默认只允许注册 `customer` 角色，**不提供前端公开注册管理员功能**。
+  
+  若需要在数据库中将某个已注册的账号提升为管理员，或新增管理员账号，方法如下：
+  * **方法 A（提升已有账号为 Admin）**：在 pgAdmin 或 psql 中执行以下 SQL 语句：
+    ```sql
+    UPDATE users SET role = 'admin' WHERE email = 'newcustomer@example.com';
+    ```
+  * **方法 B（直接 SQL 插入预设密码为 `AdminPass123!` 的新管理员）**：
+    ```sql
+    INSERT INTO users (name, email, password_hash, role)
+    VALUES (
+      'Custom Admin',
+      'newadmin@example.com',
+      'scrypt$v1$N=16384,r=8,p=1$HihN1jt0iLhkN9tdvbju5g$J9GZLeQPAF6HPSPNFBXZACN9vozXqvl5wwY6fHJD_D0RvYtw7rbwZSWrhKpW5Me831vcv1CWbk-HOVDi8EO1Mg',
+      'admin'
+    );
+    ```
 
 ---
 
