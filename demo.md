@@ -209,9 +209,9 @@ npm run demo:vulnerable:start
 
 - **操作步骤**：
   1. **Session Cookie 与控制台防窃取测试 (Console XSS Test)**：
-     - 打开两端浏览器 `F12` -> 进入 **控制台 (Console)** 标签页，输入 `document.cookie` 并回车：
-     - **Vulnerable 端 (`:3100`)**：控制台直接打出包含 `vulnerable_demo_sid` 的明文 Cookie，证明一旦存在 XSS，攻击者可直接用脚本窃取 Session。
-     - **Secure 端 (`:3000`)**：控制台返回空字符串 `""`，因为 Cookie 强制开启了 `HttpOnly` 标识，阻断 JavaScript 访问。
+     - 打开两端浏览器 `F12` -> 进入 **控制台 (Console)** 标签页，在命令行中精确输入 `document.cookie` 并按回车（注：请勿直接输入变量名 `vulnerable_demo_sid`）：
+     - **Vulnerable 端 (`:3100`)**：控制台直接输出明文 Cookie 字符串如 `"vulnerable_demo_sid=fictional-unsafe-session-..."`，证明存在 XSS 漏洞时脚本可直接窃取身份凭证。
+     - **Secure 端 (`:3000`)**：控制台返回空字符串 `""`，因为 Cookie 开启了 `HttpOnly` 保护，彻底阻断 JavaScript 读取。
   2. **Cookie 属性对比 (Storage)**：
      - 在 Windows Firefox `F12` -> 进入 **「存储 (Storage)」 -> 「Cookie」** 选项卡查看：
      - **Secure 端 (`:3000`)** 标有 `HttpOnly` (防窃取) 与 `SameSite=Lax` (防 CSRF 跨站伪造)。
