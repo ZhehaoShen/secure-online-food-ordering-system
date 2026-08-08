@@ -63,10 +63,9 @@ BACKUP_DIRECTORY=backups
 # 2. 安装项目依赖
 npm ci --ignore-scripts
 
-# 3. 执行角色权限应用、表结构迁移与假数据导入
+# 3. 执行角色权限应用、表结构迁移与种子数据填充
 npm run db:roles
-npm run db:migrate
-npm run db:seed
+npm run db:setup
 ```
 
 ### 1.3 启动主安全应用 (窗口 1)
