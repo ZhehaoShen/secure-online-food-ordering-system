@@ -1,6 +1,10 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import {
+  removeVulnerablePid,
+  writeVulnerablePid,
+} from "../../src/runtime-state.js";
 import { createVulnerableDemoApplication } from "./app.js";
 import { readVulnerableDemoConfig } from "./config.js";
 import {
@@ -18,6 +22,7 @@ export function startVulnerableDemo(
   const app = createVulnerableDemoApplication({ pool, config });
   emitLocalOnlyWarning(warningWriter);
   const server = app.listen(config.port, config.host);
+  writeVulnerablePid(process.pid);
 
   return Object.freeze({
     server,
@@ -33,6 +38,7 @@ export function startVulnerableDemo(
         });
       });
       await closeVulnerableDemoPool(pool);
+      removeVulnerablePid(process.pid);
     },
   });
 }

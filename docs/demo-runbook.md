@@ -20,7 +20,7 @@ This runbook outlines the exact 10-step live demonstration sequence for August 1
    npm run demo:vulnerable:setup
    npm run demo:vulnerable:start
    ```
-   *(Running on [http://127.0.0.1:3001](http://127.0.0.1:3001))*
+   *(Running on [http://127.0.0.1:3100](http://127.0.0.1:3100))*
 
 4. **Fictional Accounts for Demo**:
    - Customer Account: `customer1@example.com` / `CustomerPass123!`
@@ -31,16 +31,16 @@ This runbook outlines the exact 10-step live demonstration sequence for August 1
 ## 10-Step Live Demonstration Sequence
 
 ### Step 1: Start Environments & Show Isolation Warning
-- **Route**: `http://127.0.0.1:3000/` and `http://127.0.0.1:3001/`
-- **Action**: Open both URLs side-by-side in browser. Point out the prominent banner on port 3001: *"EDUCATIONAL VULNERABLE DEMO — LOCAL LOOPBACK ONLY"*.
+- **Route**: `http://127.0.0.1:3000/` and `http://127.0.0.1:3100/`
+- **Action**: Open both URLs side-by-side in browser. Point out the prominent banner on port 3100: *"EDUCATIONAL VULNERABLE DEMO — LOCAL LOOPBACK ONLY"*.
 - **Source File**: [demo/vulnerable/server.js](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/demo/vulnerable/server.js)
 - **Speaking Note**: "We maintain strict isolation: the vulnerable demo runs only on loopback with fictional data and interlocks that prevent it from running in production."
-- **Recovery**: If port 3001 is unresponsive, run `npm run demo:vulnerable:start`.
+- **Recovery**: If port 3100 is unresponsive, run `npm run demo:vulnerable:start`.
 
 ---
 
 ### Step 2: Insecure Login SQL Injection Demonstration
-- **Route**: `http://127.0.0.1:3001/login`
+- **Route**: `http://127.0.0.1:3100/login`
 - **Input**:
   - Email: `' OR '1'='1`
   - Password: `anything`
@@ -66,7 +66,7 @@ This runbook outlines the exact 10-step live demonstration sequence for August 1
 ---
 
 ### Step 4: Insecure XSS Demonstration
-- **Route**: `http://127.0.0.1:3001/search?q=<script>alert('XSS-Demo')</script>`
+- **Route**: `http://127.0.0.1:3100/search?q=<script>alert('XSS-Demo')</script>`
 - **Expected Visible Result**: Browser executes the injected JavaScript and pops up an alert box.
 - **Source File**: [demo/vulnerable/views/search.ejs](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/demo/vulnerable/views/search.ejs)
 - **Screenshot Ref**: `evidence/day-05/2026-08-07-xss-insecure.png`
@@ -130,4 +130,4 @@ This runbook outlines the exact 10-step live demonstration sequence for August 1
   npm run shutdown
   ```
 - **Speaking Note**: "Both the secure application and isolated demo environments are safely shut down."
-- **Recovery**: Verify processes stopped via `lsof -i :3000` and `lsof -i :3001`.
+- **Recovery**: Verify processes stopped via `lsof -i :3000` and `lsof -i :3100`.

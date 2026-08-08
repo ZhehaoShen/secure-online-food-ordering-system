@@ -78,7 +78,7 @@ npm run demo:vulnerable:setup
 # Start isolated local-only vulnerable demo
 npm run demo:vulnerable:start
 ```
-- Access Isolated Vulnerable Demo: [http://127.0.0.1:3001](http://127.0.0.1:3001)
+- Access Isolated Vulnerable Demo: [http://127.0.0.1:3100](http://127.0.0.1:3100)
 
 ### 1.8 Database Backup and Restore
 ```bash

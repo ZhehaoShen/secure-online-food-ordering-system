@@ -65,14 +65,32 @@ function cookiePair(response) {
 }
 
 async function postForm(baseUrl, path, values, cookie = null) {
+  let sessionCookie = cookie;
+  let csrfToken = values._csrf;
+
+  if (!csrfToken) {
+    const fetchPath = sessionCookie ? "/" : "/login";
+    const pageRes = await fetch(`${baseUrl}${fetchPath}`, {
+      headers: { accept: "text/html", ...(sessionCookie ? { cookie: sessionCookie } : {}) },
+    });
+    const html = await pageRes.text();
+    if (!sessionCookie) {
+      sessionCookie = cookiePair(pageRes);
+    }
+    const match = html.match(/name="_csrf"\s+value="([a-f0-9]{64})"/);
+    csrfToken = match ? match[1] : "";
+  }
+
+  const payload = { ...values, _csrf: csrfToken };
+
   return fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: {
       accept: "text/html",
       "content-type": "application/x-www-form-urlencoded",
-      ...(cookie ? { cookie } : {}),
+      ...(sessionCookie ? { cookie: sessionCookie } : {}),
     },
-    body: new URLSearchParams(values),
+    body: new URLSearchParams(payload),
     redirect: "manual",
   });
 }
@@ -245,7 +263,7 @@ describe.sequential("session-backed cart workflow", () => {
     expect(cart.html).not.toContain("$0.01");
 
     const sessionResult = await pool.query(
-      'SELECT sess FROM "session"',
+      `SELECT sess FROM "session" WHERE (sess->>'user') IS NOT NULL`,
     );
     expect(sessionResult.rows[0].sess.cart).toEqual({
       items: {

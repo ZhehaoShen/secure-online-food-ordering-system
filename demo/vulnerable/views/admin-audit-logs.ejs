@@ -1,0 +1,37 @@
+<%- include("partials/header", { pageTitle: "Audit logs", activePath: "/admin/audit-logs" }) %>
+
+<main id="main-content" class="admin-main">
+  <div class="shell">
+    <section class="admin-heading">
+      <p class="section-kicker">Administrator view</p>
+      <h1>Security<br><em>audit logs.</em></h1>
+      <p>In the vulnerable app, audit logs expose sensitive information without redaction and can be accessed without admin credentials.</p>
+    </section>
+
+    <section>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Actor</th>
+            <th>Details (Unredacted in Vulnerable Demo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>user_signin_success</td>
+            <td>fictional-customer</td>
+            <td><code>{ "email": "customer1@vulnerable-demo.test", "password": "CustomerPass123!" }</code></td>
+          </tr>
+          <tr>
+            <td>sqli_bypass_triggered</td>
+            <td>anonymous</td>
+            <td><code>{ "query": "SELECT * FROM users WHERE email = '' OR '1'='1'" }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

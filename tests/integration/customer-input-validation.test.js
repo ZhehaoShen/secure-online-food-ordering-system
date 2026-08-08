@@ -47,14 +47,17 @@ async function get(baseUrl, path) {
   return Object.freeze({ response, html: await response.text() });
 }
 
+const MOCK_CSRF_TOKEN = "0000000000000000000000000000000000000000000000000000000000000000";
+
 async function post(baseUrl, path, body = "") {
+  const fullBody = body ? `${body}&_csrf=${MOCK_CSRF_TOKEN}` : `_csrf=${MOCK_CSRF_TOKEN}`;
   const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: {
       accept: "text/html",
       "content-type": "application/x-www-form-urlencoded",
     },
-    body,
+    body: fullBody,
     redirect: "manual",
   });
 
@@ -107,6 +110,7 @@ describe.sequential("customer cart and order request validation", () => {
         request.session = {
           user: { id: "41", name: "Customer Fiction", role: "customer" },
           cart: { items: { "7": 2 } },
+          csrfToken: MOCK_CSRF_TOKEN,
           save(callback) {
             callback();
           },

@@ -21,8 +21,9 @@ import {
 } from "./target.js";
 
 const DEMO_DIRECTORY = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(DEMO_DIRECTORY, "..", "..");
 const VIEW_DIRECTORY = resolve(DEMO_DIRECTORY, "views");
-const PUBLIC_DIRECTORY = resolve(DEMO_DIRECTORY, "public");
+const PUBLIC_DIRECTORY = resolve(PROJECT_ROOT, "public");
 
 export const SQL_INJECTION_CONTROL_TERM = "Classroom Veggie Wrap";
 export const APPROVED_SQL_INJECTION_PAYLOAD =
@@ -321,7 +322,7 @@ export function createVulnerableDemoApplication({ pool, config } = {}) {
   app.get("/", async (_request, response) => {
     try {
       response.status(200).render("index", {
-        pageTitle: "Isolated vulnerable demo",
+        pageTitle: "Menu",
         data: await loadFictionalData(pool),
       });
     } catch {
@@ -331,6 +332,142 @@ export function createVulnerableDemoApplication({ pool, config } = {}) {
         "The isolated fictional demo data is unavailable.",
       );
     }
+  });
+
+  app.get("/login", (_request, response) => {
+    response.render("login", {
+      pageTitle: "Sign in",
+      email: "",
+      notice: null,
+      errors: [],
+    });
+  });
+
+  app.post("/login", async (request, response) => {
+    const { email } = request.body || {};
+
+    if (!email) {
+      return response.status(422).render("login", {
+        pageTitle: "Sign in",
+        email: "",
+        notice: null,
+        errors: ["Email address is required."],
+      });
+    }
+
+    try {
+      await verifyVulnerableDemoTarget(pool, config);
+
+      const isSqliPayload =
+        typeof email === "string" &&
+        (email.includes("' OR '") ||
+          email.includes("' OR 1=1") ||
+          email.includes(APPROVED_SQL_INJECTION_PAYLOAD));
+
+      if (isSqliPayload) {
+        const insecureSql = `SELECT id, name, email, role FROM vulnerable_demo_users WHERE email = '${email}'`;
+        const result = await pool.query(insecureSql);
+        if (result.rows.length > 0) {
+          const user = result.rows[0];
+          response.setHeader("Set-Cookie", unsafeSessionCookieHeader());
+          return response.render("index", {
+            pageTitle: "Menu",
+            notice: `Authentication bypassed via SQL Injection! Signed in as ${user.name} (${user.role}).`,
+            data: await loadFictionalData(pool),
+            currentUser: user,
+          });
+        }
+      }
+
+      const normalSql =
+        "SELECT id, name, email, role FROM vulnerable_demo_users WHERE email = $1";
+      const result = await pool.query(normalSql, [email]);
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        response.setHeader("Set-Cookie", unsafeSessionCookieHeader());
+        return response.render("index", {
+          pageTitle: "Menu",
+          notice: `Successfully signed in as ${user.name}.`,
+          data: await loadFictionalData(pool),
+          currentUser: user,
+        });
+      }
+
+      return response.status(401).render("login", {
+        pageTitle: "Sign in",
+        email,
+        notice: null,
+        errors: ["Invalid email or password."],
+      });
+    } catch {
+      return response.status(500).render("login", {
+        pageTitle: "Sign in",
+        email,
+        notice: null,
+        errors: ["Authentication error in vulnerable environment."],
+      });
+    }
+  });
+
+  app.post("/logout", (_request, response) => {
+    response.setHeader(
+      "Set-Cookie",
+      "vulnerable_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    );
+    response.redirect("/");
+  });
+
+  app.get("/search", async (request, response) => {
+    const query = request.query.q || "";
+    try {
+      let foods = [];
+      if (query) {
+        const searchSql = `SELECT id, name, category, description, price_cents FROM vulnerable_demo_foods WHERE name ILIKE '%${query}%' ORDER BY id ASC`;
+        const result = await pool.query(searchSql);
+        foods = result.rows.map((food) => ({
+          ...food,
+          price: money(food.price_cents),
+        }));
+      } else {
+        const result = await pool.query(FICTIONAL_FOODS_QUERY);
+        foods = result.rows.map((food) => ({
+          ...food,
+          price: money(food.price_cents),
+        }));
+      }
+
+      response.render("search", {
+        pageTitle: "Search menu",
+        query,
+        foods,
+        errors: [],
+      });
+    } catch {
+      response.render("search", {
+        pageTitle: "Search menu",
+        query,
+        foods: [],
+        errors: ["Search failed."],
+      });
+    }
+  });
+
+  app.get("/admin/orders", async (_request, response) => {
+    try {
+      const data = await loadUnauthorizedAdminView(pool, config);
+      response.render("admin-orders", {
+        pageTitle: "Manage orders",
+        orders: data.orders,
+      });
+    } catch {
+      renderError(response, 503, "Admin orders unavailable.");
+    }
+  });
+
+  app.get("/admin/audit-logs", (_request, response) => {
+    response.render("admin-audit-logs", {
+      pageTitle: "Audit logs",
+    });
   });
 
   app.get("/scenarios/sql-injection", async (request, response) => {

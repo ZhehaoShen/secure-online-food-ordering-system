@@ -39,6 +39,10 @@ export function csrfProtectionMiddleware(request, response, next) {
       next(new InvalidCsrfTokenError());
       return;
     }
+    if (request.body && typeof request.body === "object") {
+      delete request.body._csrf;
+      delete request.body.csrfToken;
+    }
   }
 
   next();

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { createApplication } from "../../src/app.js";
 import { readSessionConfig } from "../../src/config/session.js";
@@ -123,6 +123,7 @@ describe.sequential("authentication workflow", () => {
       environment: databaseServer.environment,
       logger: () => {},
     });
+    await pool.query('TRUNCATE TABLE "session"');
 
     const userRepository = createUserRepository(pool);
     userService = createUserService(userRepository, {
@@ -328,6 +329,7 @@ describe.sequential("authentication workflow", () => {
   });
 
   test("persists only the minimum authenticated identity in PostgreSQL", async () => {
+    await pool.query('TRUNCATE TABLE "session"');
     const response = await submitLogin(
       baseUrl,
       customerEmail.toUpperCase(),

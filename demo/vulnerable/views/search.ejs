@@ -1,0 +1,98 @@
+<%- include("partials/header", { pageTitle, activePath: "/search" }) %>
+
+<main id="main-content" class="search-main">
+  <div class="shell">
+    <section class="search-heading" aria-labelledby="search-heading">
+      <div>
+        <p class="section-kicker">Find a dish</p>
+        <h1 id="search-heading">Search the<br><em>menu.</em></h1>
+      </div>
+      <p>
+        Search available fictional foods by name, narrow by category, or combine both filters.
+      </p>
+    </section>
+
+    <section class="search-panel" aria-label="Food search filters">
+      <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="form-errors" role="alert" aria-labelledby="search-error-title">
+          <p id="search-error-title">The search could not be completed.</p>
+          <ul>
+            <% errors.forEach((error) => { %>
+              <li><%= error %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form class="search-form" method="get" action="/search">
+        <div class="form-field">
+          <label for="q">Food name</label>
+          <input
+            id="q"
+            name="q"
+            type="search"
+            value="<%= typeof query !== 'undefined' ? query : '' %>"
+            maxlength="120"
+            placeholder="Try wrap, soup, or berry"
+          >
+        </div>
+
+        <button class="search-button" type="submit">Search menu</button>
+      </form>
+    </section>
+
+    <section aria-labelledby="search-results-heading">
+      <div class="search-results-heading">
+        <div>
+          <p class="section-kicker">Search results</p>
+          <h2 id="search-results-heading">
+            <% if (typeof query !== 'undefined' && query) { %>
+              Results for: <%- query %>
+            <% } else { %>
+              All available dishes
+            <% } %>
+          </h2>
+        </div>
+        <p class="search-count">
+          <%= foods.length %> <%= foods.length === 1 ? "result" : "results" %>
+        </p>
+      </div>
+
+      <% if (foods.length > 0) { %>
+        <div class="menu-grid">
+          <% foods.forEach((food, index) => { %>
+            <article class="menu-card">
+              <div class="card-index" aria-hidden="true">
+                <span><%= String(index + 1).padStart(2, "0") %></span>
+                <span class="index-line"></span>
+              </div>
+              <div class="card-content">
+                <div class="card-meta">
+                  <span class="category-label"><%= food.category %></span>
+                  <span class="availability">Available</span>
+                </div>
+                <h3><%= food.name %></h3>
+                <p><%= food.description %></p>
+                <div class="card-footer">
+                  <strong><%= food.price %></strong>
+                  <span>CAD</span>
+                </div>
+              </div>
+            </article>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <span class="empty-mark" aria-hidden="true">0</span>
+          <div>
+            <p class="section-kicker">No matches</p>
+            <h3>No available dishes match these filters.</h3>
+            <p>Try searching for wrap or soup.</p>
+          </div>
+        </div>
+      <% } %>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

@@ -1,24 +1,37 @@
-import { removeServerPid, readServerPid } from "../src/runtime-state.js";
+import {
+  readServerPid,
+  readVulnerablePid,
+  removeServerPid,
+  removeVulnerablePid,
+} from "../src/runtime-state.js";
 
-const pid = readServerPid();
+function stopProcess(pid, removePidFn, name) {
+  if (pid === null) {
+    return;
+  }
 
-if (pid === null) {
-  console.log("No recorded application process is running.");
+  try {
+    process.kill(pid, 0);
+    process.kill(pid, "SIGTERM");
+    removePidFn(pid);
+    console.log(`Requested shutdown for ${name} process ${pid}.`);
+  } catch (error) {
+    if (error?.code === "ESRCH") {
+      removePidFn(pid);
+      console.log(`Removed stale ${name} PID file.`);
+    } else {
+      console.error(`Failed to shutdown ${name} process ${pid}:`, error.message);
+    }
+  }
+}
+
+const serverPid = readServerPid();
+const vulnerablePid = readVulnerablePid();
+
+if (serverPid === null && vulnerablePid === null) {
+  console.log("No recorded application processes are running.");
   process.exit(0);
 }
 
-try {
-  process.kill(pid, 0);
-} catch (error) {
-  if (error?.code === "ESRCH") {
-    removeServerPid(pid);
-    console.log("Removed a stale application PID file.");
-    process.exit(0);
-  }
-
-  throw error;
-}
-
-process.kill(pid, "SIGTERM");
-removeServerPid(pid);
-console.log(`Requested shutdown for application process ${pid}.`);
+stopProcess(serverPid, removeServerPid, "Secure application");
+stopProcess(vulnerablePid, removeVulnerablePid, "Vulnerable application");

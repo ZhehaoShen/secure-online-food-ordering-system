@@ -142,10 +142,10 @@ describe("vulnerable baseline safety contract", () => {
       "utf8",
     );
 
-    expect(pageFiles).toHaveLength(4);
+    expect(pageFiles.length).toBeGreaterThanOrEqual(4);
     for (const page of pages) {
       expect(page.text, page.filename)
-        .toContain('include("partials/local-only-warning")');
+        .toMatch(/include\("partials\/(local-only-warning|header)"/);
     }
     for (const route of SIX_SCENARIO_ROUTES) {
       expect(index).toContain(`href="${route}"`);

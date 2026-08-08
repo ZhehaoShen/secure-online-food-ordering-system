@@ -73,6 +73,36 @@ a {
   gap: 32px;
 }
 
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.env-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.env-badge-secure {
+  color: #155724;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.env-badge-vulnerable {
+  color: #721c24;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

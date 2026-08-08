@@ -1,68 +1,53 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <title><%= pageTitle %></title>
-    <link rel="stylesheet" href="/assets/demo.css">
-  </head>
-  <body>
-    <main class="page-shell">
-      <%- include("partials/local-only-warning") %>
+<%- include("partials/header", { pageTitle: "Menu", activePath: "/" }) %>
 
-      <section class="panel" aria-labelledby="fixture-heading">
-        <p class="section-label">Fictional fixture preview</p>
-        <h2 id="fixture-heading">Isolated classroom data</h2>
-        <p>No password, session identifier, database credential, or connection string is displayed.</p>
-        <nav class="scenario-links" aria-label="Prepared vulnerable baseline scenarios">
-          <a class="button-link" href="/scenarios/sql-injection">SQL injection</a>
-          <a class="button-link" href="/scenarios/xss">Reflected XSS</a>
-          <a class="button-link" href="/scenarios/weak-password">Weak password</a>
-          <a class="button-link" href="/scenarios/unsafe-session">Unsafe session</a>
-          <a class="button-link" href="/scenarios/missing-admin-authorization">Missing admin authorization</a>
-          <a class="button-link" href="/scenarios/excessive-database-privileges">Excessive database privileges</a>
-        </nav>
-      </section>
+<main id="main-content" class="menu-main">
+  <div class="shell">
+    <section class="menu-hero">
+      <p class="section-kicker">Northstar Kitchen Menu</p>
+      <h1>Delicious dishes<br><em>prepared fresh.</em></h1>
+      <p>Explore our menu of fictional dishes for local security demonstration.</p>
+    </section>
 
-      <section class="grid" aria-label="Fictional demonstration records">
-        <article class="panel">
-          <h2>Fictional accounts</h2>
-          <ul>
-            <% for (const user of data.users) { %>
-              <li>
-                <strong><%= user.name %></strong>
-                <span><%= user.email %> · <%= user.role %></span>
-              </li>
-            <% } %>
-          </ul>
-        </article>
+    <section aria-labelledby="menu-dishes-heading">
+      <div class="search-results-heading">
+        <h2 id="menu-dishes-heading">All available dishes</h2>
+        <p class="search-count"><%= data.foods.length %> items</p>
+      </div>
 
-        <article class="panel">
-          <h2>Fictional menu</h2>
-          <ul>
-            <% for (const food of data.foods) { %>
-              <li>
-                <strong><%= food.name %></strong>
-                <span><%= food.category %> · <%= food.price %></span>
-                <small><%= food.description %></small>
-              </li>
-            <% } %>
-          </ul>
-        </article>
+      <div class="menu-grid">
+        <% data.foods.forEach((food, index) => { %>
+          <article class="menu-card">
+            <div class="card-index" aria-hidden="true">
+              <span><%= String(index + 1).padStart(2, "0") %></span>
+              <span class="index-line"></span>
+            </div>
+            <div class="card-content">
+              <div class="card-meta">
+                <span class="category-label"><%= food.category %></span>
+                <span class="availability">Available</span>
+              </div>
+              <h3><%= food.name %></h3>
+              <p><%= food.description %></p>
+              <div class="card-footer">
+                <strong><%= food.price %></strong>
+                <span>CAD</span>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    <section class="scenario-shortcuts" style="margin-top: 48px; padding: 24px; background: rgba(0,0,0,0.03); border-radius: 8px;">
+      <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Baseline Scenario Endpoints</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <a href="/scenarios/sql-injection" class="text-link">SQL Injection</a>
+        <a href="/scenarios/xss" class="text-link">Reflected XSS</a>
+        <a href="/scenarios/weak-password" class="text-link">Weak Password</a>
+        <a href="/scenarios/unsafe-session" class="text-link">Unsafe Session</a>
+        <a href="/scenarios/missing-admin-authorization" class="text-link">Missing Admin Auth</a>
+        <a href="/scenarios/excessive-database-privileges" class="text-link">Excessive DB Privileges</a>
+      </div>
+    </section>
+  </div>
+</main>
 
-        <article class="panel">
-          <h2>Fictional orders</h2>
-          <ul>
-            <% for (const order of data.orders) { %>
-              <li>
-                <strong>Order #<%= order.id %> · <%= order.status %></strong>
-                <span><%= order.customer_name %> · <%= order.total %> · <%= order.line_count %> line</span>
-              </li>
-            <% } %>
-          </ul>
-        </article>
-      </section>
-    </main>
-  </body>
-</html>
+<%- include("partials/footer") %>

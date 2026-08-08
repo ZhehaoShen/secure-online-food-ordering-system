@@ -1,0 +1,36 @@
+<%- include("partials/header", { pageTitle: "Manage orders", activePath: "/admin/orders" }) %>
+
+<main id="main-content" class="admin-main">
+  <div class="shell">
+    <section class="admin-heading">
+      <p class="section-kicker">Administrator view</p>
+      <h1>Manage<br><em>customer orders.</em></h1>
+      <p>This view displays customer orders without verifying administrator permissions in the vulnerable app.</p>
+    </section>
+
+    <section>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach((order) => { %>
+            <tr>
+              <td>#<%= order.id %></td>
+              <td><%= order.customer_name %></td>
+              <td><%= order.total %></td>
+              <td><span class="status-badge"><%= order.status %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>
