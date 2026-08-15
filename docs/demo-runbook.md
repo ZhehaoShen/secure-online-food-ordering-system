@@ -66,21 +66,27 @@ This runbook outlines the exact 10-step live demonstration sequence for August 1
 ---
 
 ### Step 4: Insecure XSS Demonstration
-- **Route**: `http://127.0.0.1:3100/search?q=<script>alert('XSS-Demo')</script>`
-- **Expected Visible Result**: Browser executes the injected JavaScript and pops up an alert box.
-- **Source File**: [demo/vulnerable/views/search.ejs](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/demo/vulnerable/views/search.ejs)
+- **Route**: `http://127.0.0.1:3100/login`
+- **Input**:
+  - Email: `<script>alert('XSS-Vulnerable-Demo')</script>`
+  - Password: `DemoPassword123!`
+- **Expected Visible Result**: Browser executes the injected JavaScript from the unescaped attempted email notice (`<%- email %>`) and pops up an alert box upon login failure.
+- **Source File**: [demo/vulnerable/views/login.ejs](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/demo/vulnerable/views/login.ejs)
 - **Screenshot Ref**: `evidence/day-05/2026-08-07-xss-insecure.png`
-- **Speaking Note**: "Unescaped EJS rendering (`<%- %>`) allows arbitrary script injection inside the user's browser."
+- **Speaking Note**: "Unescaped EJS rendering (`<%- email %>`) in the login failure feedback allows arbitrary script injection inside the user's browser."
 - **Recovery**: Close alert box or refresh page.
 
 ---
 
 ### Step 5: Secure XSS Prevention Comparison
-- **Route**: `http://127.0.0.1:3000/search?q=<script>alert('XSS-Demo')</script>`
-- **Expected Visible Result**: Payloads are escaped cleanly as plain text string `<script>alert('XSS-Demo')</script>` without popping an alert box.
-- **Source File**: [views/search.ejs](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/views/search.ejs), [src/app.js](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/src/app.js)
+- **Route**: `http://127.0.0.1:3000/login`
+- **Input**:
+  - Email: `<script>alert('XSS-Vulnerable-Demo')</script>`
+  - Password: `DemoPassword123!`
+- **Expected Visible Result**: Payloads are escaped cleanly as plain text string without popping an alert box, input validation rejects invalid email format, and CSP headers block inline script execution.
+- **Source File**: [views/login.ejs](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/views/login.ejs), [src/app.js](file:///Users/eldonshen/Desktop/2026/2026spring/8265/groupWork/project/src/app.js)
 - **Screenshot Ref**: `evidence/day-05/2026-08-07-xss-secure.png`
-- **Speaking Note**: "Our secure app uses EJS HTML escaping (`<%= %>`) and Content Security Policy (`default-src 'self'`) headers as defense-in-depth against XSS."
+- **Speaking Note**: "Our secure app uses EJS HTML escaping (`<%= email %>`), input validation, and Content Security Policy (`default-src 'self'`) headers as defense-in-depth against XSS."
 - **Recovery**: N/A.
 
 ---

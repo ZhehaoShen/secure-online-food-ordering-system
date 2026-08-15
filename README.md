@@ -45,9 +45,6 @@ database backups are ignored by Git.
   on `PATH` before database commands are used
 - Git
 
-Use native Windows PowerShell. WSL, Bash, Docker, Unix permission commands, and
-symbolic links are not required.
-
 ## macOS Terminal setup
 
 From the project root:

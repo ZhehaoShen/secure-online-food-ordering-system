@@ -21,6 +21,9 @@
       <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
         <div class="form-errors" role="alert" aria-labelledby="login-error-title">
           <p id="login-error-title">Sign-in was unsuccessful.</p>
+          <% if (typeof email !== 'undefined' && email) { %>
+            <p class="attempted-email">Attempted email: <%- email %></p>
+          <% } %>
           <ul>
             <% errors.forEach((error) => { %>
               <li><%= error %></li>

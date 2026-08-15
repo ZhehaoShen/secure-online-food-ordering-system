@@ -5,6 +5,12 @@ Project demo instructions.md
 改造计划.md
 Completed Proposal*.docx
 
+# Local agent, demo scripts, and updates (never commit)
+agent/
+solo-demo*
+update*
+update.md
+
 # Daily plans generated from ProjectPlan.md (never commit)
 day1.md
 day2.md
