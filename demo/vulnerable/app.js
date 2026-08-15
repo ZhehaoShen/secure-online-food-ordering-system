@@ -334,6 +334,40 @@ export function createVulnerableDemoApplication({ pool, config } = {}) {
     }
   });
 
+  app.get("/register", (_request, response) => {
+    response.render("register", {
+      pageTitle: "Register",
+      values: { name: "", email: "" },
+      errors: [],
+    });
+  });
+
+  app.post("/register", async (request, response) => {
+    const { name, email, password, passwordConfirmation } = request.body || {};
+    const errors = [];
+
+    if (!name || !email || !password) {
+      errors.push("Name, email address, and password are required.");
+    } else if (password !== passwordConfirmation) {
+      errors.push("Passwords do not match.");
+    }
+
+    if (errors.length > 0) {
+      return response.status(422).render("register", {
+        pageTitle: "Register",
+        values: { name: name || "", email: email || "" },
+        errors,
+      });
+    }
+
+    return response.render("login", {
+      pageTitle: "Sign in",
+      email: email || "",
+      notice: "Account registered successfully! Weak password accepted without policy checks. You can now sign in.",
+      errors: [],
+    });
+  });
+
   app.get("/login", (_request, response) => {
     response.render("login", {
       pageTitle: "Sign in",

@@ -1,0 +1,92 @@
+<%- include("partials/header", { pageTitle, activePath: "/register" }) %>
+
+<main id="main-content" class="auth-main">
+  <div class="shell auth-layout">
+    <section class="auth-intro" aria-labelledby="register-heading">
+      <p class="section-kicker">Local demonstration account creation</p>
+      <h1 id="register-heading">Create<br><em>account.</em></h1>
+      <p>
+        Register a fictional local account for the vulnerable demonstration.
+      </p>
+    </section>
+
+    <section class="auth-card" aria-labelledby="register-form-heading">
+      <h2 id="register-form-heading">Create your account</h2>
+      <p class="auth-card-lede">This vulnerable baseline accepts any password without validation.</p>
+
+      <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="form-errors" role="alert" aria-labelledby="form-error-title">
+          <p id="form-error-title">Please review the form.</p>
+          <ul>
+            <% errors.forEach((error) => { %>
+              <li><%= error %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form method="post" action="/register" novalidate>
+        <div class="form-field">
+          <label for="name">Name</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value="<%= typeof values !== 'undefined' && values.name ? values.name : '' %>"
+            autocomplete="name"
+            maxlength="100"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="text"
+            value="<%= typeof values !== 'undefined' && values.email ? values.email : '' %>"
+            autocomplete="email"
+            maxlength="254"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            maxlength="1024"
+            required
+          >
+          <p id="password-help" class="field-help">
+            Note: The vulnerable version enforces no minimum length or password complexity. Weak passwords (e.g., 1234) are accepted.
+          </p>
+        </div>
+
+        <div class="form-field">
+          <label for="password-confirmation">Confirm password</label>
+          <input
+            id="password-confirmation"
+            name="passwordConfirmation"
+            type="password"
+            autocomplete="new-password"
+            maxlength="1024"
+            required
+          >
+        </div>
+
+        <button class="primary-button" type="submit">Create account</button>
+      </form>
+
+      <p class="auth-alternate">
+        Already registered? <a href="/login">Sign in</a>
+      </p>
+    </section>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

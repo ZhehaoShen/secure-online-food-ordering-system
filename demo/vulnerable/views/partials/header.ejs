@@ -36,6 +36,7 @@
           <% } else { %>
             <a class="<%= typeof activePath !== 'undefined' && activePath === '/admin/orders' ? 'nav-link is-active' : 'nav-link' %>" href="/admin/orders">Manage orders</a>
             <a class="<%= typeof activePath !== 'undefined' && activePath === '/admin/audit-logs' ? 'nav-link is-active' : 'nav-link' %>" href="/admin/audit-logs">Audit logs</a>
+            <a class="<%= typeof activePath !== 'undefined' && activePath === '/register' ? 'nav-link is-active' : 'nav-link' %>" href="/register">Register</a>
             <a class="<%= typeof activePath !== 'undefined' && activePath === '/login' ? 'nav-action is-active' : 'nav-action' %>" href="/login">Sign in</a>
           <% } %>
         </nav>
